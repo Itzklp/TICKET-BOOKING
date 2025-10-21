@@ -1,0 +1,66 @@
+// booking.proto
+syntax = "proto3";
+package booking;
+
+option java_package = "com.example.booking";
+option go_package = "github.com/example/distributed-ticket-booking/proto/booking;booking";
+
+// Booking service used by clients to query and book seats.
+// The actual booking operation should be applied via the Raft state machine
+// to ensure consistency across booking nodes.
+service BookingService {
+  // Book a specific seat for a user (goes through Raft).
+  rpc BookSeat(BookRequest) returns (BookResponse);
+
+  // Query seat availability.
+  rpc QuerySeat(QueryRequest) returns (QueryResponse);
+
+  // List seat status for a show / event (paged).
+  rpc ListSeats(ListSeatsRequest) returns (ListSeatsResponse);
+}
+
+message BookRequest {
+  string user_id = 1;            // ID of the user making the booking
+  int32 seat_id = 2;            // seat number / id
+  string show_id = 3;           // optional show or event id
+  string correlation_id = 4;    // client correlation id for tracing
+  // optionally include payment info token (or payment is separate service)
+  string payment_token = 5;
+}
+
+message BookResponse {
+  bool success = 1;
+  string message = 2;           // human readable reason / error
+  int64 booking_id = 3;         // unique booking id (if success)
+  Seat seat = 4;                // resulting seat state
+}
+
+message QueryRequest {
+  string show_id = 1;
+  int32 seat_id = 2;
+}
+
+message QueryResponse {
+  bool available = 1;
+  Seat seat = 2;
+}
+
+message ListSeatsRequest {
+  string show_id = 1;
+  int32 page_size = 2;
+  int32 page_token = 3;
+}
+
+message ListSeatsResponse {
+  repeated Seat seats = 1;
+  int32 next_page_token = 2;
+}
+
+message Seat {
+  int32 seat_id = 1;
+  string show_id = 2;
+  bool reserved = 3;
+  string reserved_by = 4;     // user_id who reserved or empty
+  int64 reserved_at = 5;      // unix epoch ms
+  int64 booking_id = 6;       // link to booking record (if booked)
+}

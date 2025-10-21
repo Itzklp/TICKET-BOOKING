@@ -1,0 +1,35 @@
+// chatbot.proto
+syntax = "proto3";
+package chatbot;
+
+option java_package = "com.example.chatbot";
+option go_package = "github.com/example/distributed-ticket-booking/proto/chatbot;chatbot";
+
+// Simple chatbot used to help users pick seats, answer booking questions, etc.
+// This is intentionally lightweight — you can later add streaming or bi-directional RPCs.
+
+service Chatbot {
+  // Simple single-turn chat.
+  rpc Ask(AskRequest) returns (AskResponse);
+
+  // (Optional) streaming chat for multi-turn conversations:
+  // rpc Chat(stream ChatMessage) returns (stream ChatMessage);
+}
+
+message AskRequest {
+  string user_id = 1;
+  string text = 2;               // user question / prompt
+  string session_id = 3;         // optional session id for context
+  map<string,string> context = 4;// optional key/value context (e.g., {"show_id":"S1"})
+}
+
+message AskResponse {
+  string reply_text = 1;
+  string intent = 2;             // predicted intent (optional)
+  repeated Suggestion suggestions = 3;
+}
+
+message Suggestion {
+  string title = 1;
+  string payload = 2;            // can be sent back to backend (e.g., "book_seat:12")
+}

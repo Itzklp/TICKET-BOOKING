@@ -1,0 +1,46 @@
+// payment.proto
+syntax = "proto3";
+package payment;
+
+option java_package = "com.example.payment";
+option go_package = "github.com/example/distributed-ticket-booking/proto/payment;payment";
+
+// Payment service for charging users when booking a seat.
+// Designed as a simple RPC gateway to a payment processor or mock.
+
+service PaymentService {
+  // Charge a user / token and return transaction result.
+  rpc ProcessPayment(PaymentRequest) returns (PaymentResponse);
+
+  // Query a transaction
+  rpc QueryTransaction(QueryTransactionRequest) returns (QueryTransactionResponse);
+}
+
+message PaymentRequest {
+  string user_id = 1;
+  string payment_method_id = 2;   // reference to stored payment method or token
+  string currency = 3;            // e.g., "INR", "USD"
+  int64 amount_cents = 4;         // amount in smallest currency unit
+  string correlation_id = 5;      // trace id for client
+  string metadata = 6;            // optional JSON metadata
+}
+
+message PaymentResponse {
+  bool success = 1;
+  string transaction_id = 2;
+  string status = 3;              // e.g., "COMPLETED", "FAILED", "PENDING"
+  string message = 4;             // error / info
+}
+
+message QueryTransactionRequest {
+  string transaction_id = 1;
+}
+
+message QueryTransactionResponse {
+  string transaction_id = 1;
+  string status = 2;
+  int64 amount_cents = 3;
+  string currency = 4;
+  int64 created_at = 5;
+  string raw_response = 6;        // provider response (optional)
+}
