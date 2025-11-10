@@ -24,9 +24,11 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 # Ensure the protobuf gRPC stubs are generated (e.g. with:
 # and are available on the PYTHONPATH)
 from proto import booking_pb2_grpc
+from proto import raft_pb2_grpc # <--- NEW IMPORT
 
 from booking.booking_service import BookingServiceServicer
 from raft.raft import RaftNode
+from raft.raft_service import RaftServicer # <--- NEW IMPORT
 
 
 # -------------------------------------------------------------------------
@@ -60,9 +62,14 @@ async def serve(config_path: str):
     )
     await raft_node.start()
 
-    # Initialize Booking gRPC service
+    # Initialize gRPC server
     server = grpc.aio.server()
     booking_servicer = BookingServiceServicer(raft_node)
+    
+    # Register Raft Service with gRPC server <--- NEW REGISTRATION
+    raft_servicer = RaftServicer(raft_node)
+    raft_pb2_grpc.add_RaftServicer_to_server(
+        raft_servicer, server)
 
     # Register BookingService with gRPC server
     booking_pb2_grpc.add_BookingServiceServicer_to_server(

@@ -88,19 +88,45 @@ class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
         authenticated_user_id = validation_resp.user_id
         
         # 3. Proceed with booking using the authenticated user_id
-        # Note: self.seat_manager.book_seat takes the user_id as the second
-        seat = self.seat_manager.book_seat(seat_id, authenticated_user_id) 
-        
+        try:
+            # AWAIT is CORRECT here
+            seat = await self.seat_manager.book_seat(seat_id, authenticated_user_id) 
+        except PermissionError:
+             # Handle case where the node is not the Raft leader
+             context.set_code(grpc.StatusCode.FAILED_PRECONDITION)
+             context.set_details("Booking node is not the Raft leader.")
+             return booking_pb2.BookResponse(
+                success=False,
+                message="Booking failed: Current node is not the Raft leader.",
+                booking_id=0,
+                seat=None
+            )
+        except Exception as e:
+             logger.error("Booking failed during proposal: %s", e)
+             context.set_code(grpc.StatusCode.INTERNAL)
+             context.set_details("Internal error during booking proposal.")
+             return booking_pb2.BookResponse(
+                success=False,
+                message="Booking failed due to internal error.",
+                booking_id=0,
+                seat=None
+            )
         
         if seat:
+            # If 'seat' is a coroutine here, it means something is wrong with the code 
+            # returned by self.seat_manager.book_seat's awaitable. 
+            # Assuming seat_manager.py is fixed, this should work.
             return booking_pb2.BookResponse(
                 success=True,
                 message="Seat booked successfully",
                 booking_id=seat.booking_id,
                 seat=booking_pb2.Seat(
-                    # ... (fill Seat details) ...
-                    reserved_by=authenticated_user_id,
-                    # ...
+                    seat_id=seat.seat_id,
+                    show_id=seat.show_id,
+                    reserved=seat.reserved,
+                    reserved_by=seat.reserved_by,
+                    reserved_at=seat.reserved_at,
+                    booking_id=seat.booking_id
                 )
             )
         else:
@@ -112,7 +138,8 @@ class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
             )
             
     async def QuerySeat(self, request, context):
-        seat = self.seat_manager.query_seat(request.seat_id)
+        # FIX: MUST AWAIT query_seat, as it is now an async method
+        seat = await self.seat_manager.query_seat(request.seat_id)
         if seat:
             return booking_pb2.QueryResponse(
                 available=not seat.reserved,
@@ -132,9 +159,11 @@ class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
             )
 
     async def ListSeats(self, request, context):
-        seats, next_token = self.seat_manager.list_seats(
+        # FIX: MUST AWAIT list_seats, as it is now an async method
+        seats, next_token = await self.seat_manager.list_seats(
             request.show_id, request.page_size, request.page_token
         )
+        # Note: 'seats' is a list of Seat objects here.
         return booking_pb2.ListSeatsResponse(
             seats=[
                 booking_pb2.Seat(

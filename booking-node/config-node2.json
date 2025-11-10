@@ -1,0 +1,38 @@
+{
+  "node_id": "node2",
+  "host": "127.0.0.1",
+  "port": 50052,
+
+  "peers": [
+    {
+      "node_id": "node1",
+      "host": "127.0.0.1",
+      "port": 50051
+    },
+    {
+      "node_id": "node3",
+      "host": "127.0.0.1",
+      "port": 50053
+    }
+  ],
+  
+  "raft": {
+    "heartbeat_interval_ms": 150,
+    "election_timeout_ms": 300,
+    "storage_path": "data/raft_log_2"
+  },
+  "logging": {
+    "level": "INFO",
+    "log_file": "logs/booking_node_2.log"
+  },
+  "booking": {
+    "total_seats": 100,
+    "show_id": "concert_2025",
+    "persistence_file": "data/seats_state_2.json"
+  },
+  "services": {
+    "payment_service": { "host": "127.0.0.1", "port": 6000 },
+    "chatbot_service": { "host": "127.0.0.1", "port": 7000 },
+    "auth_service": { "host": "127.0.0.1", "port": 8000 }
+  }
+}
