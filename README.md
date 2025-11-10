@@ -71,7 +71,7 @@ python chatbot-server.py
 
 ```bash
 cd client
-python client.py
+python client-cli.py
 ```
 
 ## Using the Application
