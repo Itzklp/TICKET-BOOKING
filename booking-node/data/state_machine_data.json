@@ -1,0 +1,20 @@
+{
+  "dj_2025": {
+    "total_seats": 3,
+    "price_cents": 1000,
+    "seats": {
+      "1": {
+        "reserved": true,
+        "user_id": "00000000-0000-0000-0000-000000000000",
+        "booking_id": "90d261e1-1c35-48e1-9a75-37699c9e2c80",
+        "reserved_at": 1762803654174
+      },
+      "2": {
+        "reserved": true,
+        "user_id": "ac95dcb5-634d-4936-8730-cc122f7f8c4b",
+        "booking_id": "fba7fe4a-efe2-4652-baa5-46ff0df97afd",
+        "reserved_at": 1762803706097
+      }
+    }
+  }
+}

@@ -22,6 +22,8 @@ import proto.auth_pb2_grpc as auth_pb2_grpc
 # Global variables to store session state
 session_token = None
 cli_user_id = None
+# Define the admin user ID for local checks, matching auth-server.py
+ADMIN_ID = "00000000-0000-0000-0000-000000000000" 
 
 # --- Configuration for Booking Peers ---
 BOOKING_PEERS = [
@@ -60,6 +62,83 @@ def login_user(stub):
     print("\n")
 
 
+def add_show(stub):
+    """Admin RPC to add a new show, handling Raft leader redirection."""
+    global session_token, cli_user_id, CURRENT_BOOKING_TARGET
+    if cli_user_id != ADMIN_ID:
+        print("\n[ERROR] Only the admin user can add shows. Please log in as admin.\n")
+        return
+        
+    if not session_token:
+        print("\n[ERROR] You must log in first (Option 6).\n")
+        return
+        
+    show_id = input("Enter Show ID (e.g., concert_2025): ")
+    total_seats = int(input("Enter Total Seats: "))
+    price_cents = int(input("Enter Price (in cents, e.g., 1000): "))
+    
+    # --- Dynamic Retry Loop (Raft Leader Discovery) ---
+    peers_to_try = [CURRENT_BOOKING_TARGET] + [p for p in BOOKING_PEERS if p != CURRENT_BOOKING_TARGET]
+
+    response = None
+    success = False
+    
+    for peer_addr in peers_to_try:
+        try:
+            # 1. Update the current target connection if we're trying a new peer
+            if peer_addr != CURRENT_BOOKING_TARGET:
+                 print(f"[RETRY] Redirecting to next peer: {peer_addr}")
+                 CURRENT_BOOKING_TARGET = peer_addr
+                 channel = grpc.insecure_channel(CURRENT_BOOKING_TARGET)
+                 stub = booking_pb2_grpc.BookingServiceStub(channel)
+                 
+            print(f"[ATTEMPT] Trying AddShow via {CURRENT_BOOKING_TARGET}...")
+
+            request = booking_pb2.AddShowRequest(
+                user_id=session_token,
+                show_id=show_id,
+                total_seats=total_seats,
+                price_cents=price_cents
+            )
+            
+            response = stub.AddShow(request) 
+            
+            if response.success:
+                success = True
+                break
+            
+            # If not success, check if it's a known Raft error or a business error
+            if not response.success and "not the Raft leader" in response.message:
+                continue # Retry next peer
+            if not response.success:
+                break # Stop on definitive business logic failure
+
+        except grpc.RpcError as e:
+            if e.code() == grpc.StatusCode.FAILED_PRECONDITION:
+                print(f"[INFO] {peer_addr} is not the leader. Trying next peer...")
+            elif e.code() == grpc.StatusCode.UNAVAILABLE:
+                print(f"[ERROR] Node {peer_addr} is unavailable. Trying next peer...")
+            else:
+                print(f"[ERROR] Unhandled RPC error connecting to {peer_addr}: {e.details()}")
+                break 
+        except Exception as e:
+            print(f"[FATAL] Unexpected error: {e}")
+            break
+
+    
+    if success and response:
+         print(
+            (
+                f"\nAdd Show Response: {response.message} "
+                f"(Success: {response.success}) via {CURRENT_BOOKING_TARGET}\n"
+            )
+        )
+    elif response:
+        print(f"\nAdd Show Failed: {response.message}\n")
+    else:
+        print("\n[CRITICAL] Add Show failed: Could not connect to any booking node or an unhandled error occurred.\n")
+
+
 def book_seat(stub):
     global session_token, cli_user_id, CURRENT_BOOKING_TARGET
     if not session_token:
@@ -67,10 +146,11 @@ def book_seat(stub):
         return
     
     seat_id = int(input("Enter seat ID: "))
-    show_id = input("Enter show ID: ")
-    
+    show_id = input("Enter show ID (e.g., concert_2025): ") 
+    # --- EXPLICIT PAYMENT INPUT ---
+    card_number = input("Enter Credit Card Number (Use 9999 to simulate payment failure): ")
+
     # --- Dynamic Retry Loop (Raft Leader Discovery) ---
-    # We will try all known peers, starting from the current target
     peers_to_try = [CURRENT_BOOKING_TARGET] + [p for p in BOOKING_PEERS if p != CURRENT_BOOKING_TARGET]
 
     response = None
@@ -89,9 +169,10 @@ def book_seat(stub):
             print(f"[ATTEMPT] Trying booking via {CURRENT_BOOKING_TARGET}...")
 
             request = booking_pb2.BookRequest(
-                user_id=session_token,
+                user_id=session_token, 
                 seat_id=seat_id,
-                show_id=show_id
+                show_id=show_id,
+                payment_token=card_number # Sending card number via this field
             )
             
             response = stub.BookSeat(request)
@@ -100,42 +181,37 @@ def book_seat(stub):
                 success = True
                 break
             
-            # If successful is False, it means the seat was already booked (business logic failure)
-            # This is not a Raft error, so we stop trying.
+            # If not success, check if it's a known Raft error or a business error
+            if not response.success and "not the Raft leader" in response.message:
+                continue # Retry next peer
             if not response.success:
-                break 
+                break # Stop on definitive business logic failure (e.g., seat already booked, payment failed)
 
         except grpc.RpcError as e:
-            # Check for the specific FAILED_PRECONDITION error (StatusCode.FAILED_PRECONDITION is 9)
             if e.code() == grpc.StatusCode.FAILED_PRECONDITION:
-                # This is the expected 'Not Leader' error. Continue to next peer.
                 print(f"[INFO] {peer_addr} is not the leader. Trying next peer...")
             elif e.code() == grpc.StatusCode.UNAVAILABLE:
-                # Connection error (e.g., node is down). Continue to next peer.
                 print(f"[ERROR] Node {peer_addr} is unavailable. Trying next peer...")
             else:
-                # Handle other unrecoverable errors (e.g., INTERNAL)
                 print(f"[ERROR] Unhandled RPC error connecting to {peer_addr}: {e.details()}")
                 break 
         except Exception as e:
             print(f"[FATAL] Unexpected error: {e}")
             break
-
-
-    # --- End Dynamic Retry Loop ---
     
+    # --- FIX: Explicitly print the detailed failure message ---
     if success and response:
          print(
             (
-                f"\nBooking Response: {response.message} "
-                f"(Success: {response.success}) via {CURRENT_BOOKING_TARGET}\n"
+                f"\n--- BOOKING SUCCESS ---\nMessage: {response.message} "
+                f"\nTarget Node: {CURRENT_BOOKING_TARGET}\n-----------------------\n"
             )
         )
     elif response:
-        # Business logic failure (seat already booked or invalid)
-        print(f"\nBooking Failed: {response.message}\n")
+        # Business logic failure (e.g., payment failed, seat booked, authentication)
+        print(f"\n--- BOOKING FAILED ---\nReason: {response.message}\nTarget Node: {CURRENT_BOOKING_TARGET}\n----------------------\n")
     else:
-        # All peers failed to respond or unknown error
+        # Critical connection failure
         print("\n[CRITICAL] Booking failed: Could not connect to any booking node or an unhandled error occurred.\n")
 
 
@@ -190,10 +266,12 @@ def query_seat(stub):
     # --- End Dynamic Retry Loop ---
     
     if success and response:
-        print(f"Seat {seat_id} available: {response.available} via {CURRENT_BOOKING_TARGET}")
+        seat = response.seat
+        # Fetch price from the seat object, which the server now returns
+        price_info = f" (Price: {seat.price_cents/100:.2f} USD)" if seat and seat.price_cents else ""
+        print(f"Seat {seat_id} available: {response.available}{price_info} via {CURRENT_BOOKING_TARGET}")
     elif response:
-        # Should not happen for query if successful=True
-        print(f"Query Failed: Received response, but unable to parse.")
+        print(f"Query Failed: Received response, but unable to parse or seat not found.")
     else:
         print("\n[CRITICAL] Query failed: Could not connect to any booking node or an unhandled error occurred.\n")
 
@@ -211,25 +289,33 @@ def ask_chatbot(chatbot_stub):
 
 
 def process_payment(payment_stub):
+    """Standalone test for payment, now prompts for inputs."""
     user_id = input("Enter user ID: ")
     amount = int(input("Enter amount (in cents): "))
     currency = input("Currency (e.g., USD): ")
+    # --- NEW: Prompt for Card Number ---
+    card_number = input("Enter Credit Card Number (Use 9999 to simulate payment failure): ")
 
     req = payment_pb2.PaymentRequest(
         user_id=user_id,
         payment_method_id="demo-card",
         currency=currency,
-        amount_cents=amount
+        amount_cents=amount,
+        card_number=card_number # Use the input card number
     )
     resp = payment_stub.ProcessPayment(req)
-    print(f"Payment Status: {resp.status} (ID: {resp.transaction_id})")
-    
+    # --- FIX: Explicitly show payment status and message ---
+    print(f"\n--- STANDALONE PAYMENT RESULT ---")
+    print(f"Status: {resp.status} (Success: {resp.success})")
+    print(f"Message: {resp.message}")
+    print(f"Transaction ID: {resp.transaction_id}")
+    print("---------------------------------\n")
+
 
 def main():
     global CURRENT_BOOKING_TARGET
     
-    # Connect to services
-    # We initialize the booking_stub only once against the initial target
+    # Connect to services - we use CURRENT_BOOKING_TARGET for the initial connection only
     booking_channel = grpc.insecure_channel(CURRENT_BOOKING_TARGET)
     booking_stub = booking_pb2_grpc.BookingServiceStub(booking_channel)
 
@@ -246,21 +332,20 @@ def main():
         status_line = f"Logged in as: {cli_user_id[:8]}..." if cli_user_id else "Not Logged In"
         
         print(f"\n=== Distributed Ticket Booking CLI ({status_line} - Target: {CURRENT_BOOKING_TARGET}) ===")
-        print("1. Book a Seat")
+        print("1. Book a Seat (Requires Login)")
         print("2. Query Seat")
-        print("3. Process Payment")
+        print("3. Process Payment (Standalone Test)")
         print("4. Chat with Chatbot")
         print("5. Register User (Auth)") 
         print("6. Login User (Auth)")    
-        print("7. Exit")                 
+        print("7. Admin: Add/Update Show (Requires Admin Login)") 
+        print("8. Exit")                 
 
         choice = input("Select option: ")
 
         if choice == "1":
-            # The book_seat function handles dynamic stub switching internally
             book_seat(booking_stub)
         elif choice == "2":
-            # The query_seat function handles dynamic stub switching internally
             query_seat(booking_stub)
         elif choice == "3":
             process_payment(payment_stub)
@@ -271,6 +356,8 @@ def main():
         elif choice == "6":
             login_user(auth_stub)    
         elif choice == "7":
+            add_show(booking_stub)
+        elif choice == "8":
             break
         else:
             print("Invalid choice.")

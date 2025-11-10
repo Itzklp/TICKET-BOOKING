@@ -12,93 +12,162 @@ import grpc
 # Ensure the project root (e.g., "D:/Ticket Booking") is in Python path
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-# import booking_pb2
-# import booking_pb2_grpc
-
 from booking.seat_manager import SeatManager
 
 from proto import booking_pb2, booking_pb2_grpc
 from proto import auth_pb2, auth_pb2_grpc
+from proto import payment_pb2, payment_pb2_grpc # <-- Import Payment protos/stubs
 
 logger = logging.getLogger("booking_service")
 
+# Define the admin user ID constant, matching the auth-server change
+ADMIN_ID = "00000000-0000-0000-0000-000000000000" 
 
 class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
     def __init__(self, raft_node=None):
+        # 1. Initialize Seat Manager
         self.seat_manager = SeatManager(raft_node)
         
-        # Load config to get Auth Service address
-        config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
-                                   "booking-node", "config.json")
-        
-        # This is a robust way to find the config file path from deep inside the project structure.
-        # However, a simpler way, given your existing path logic, would be to resolve a path
-        # from the project root if it were readily available. Since the original path structure 
-        # is relative to main.py, let's use a simpler import/lookup assuming config.json is accessible.
-
-        # Simplified config loading (assuming config is structured like the default one)
-        # NOTE: This assumes you handle the path correctly. We'll use the default config path relative to the project root.
+        # 2. Load config to get Auth/Payment Service addresses
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         config_path = os.path.join(project_root, "booking-node", "config.json")
         
         with open(config_path, "r") as f:
             cfg = json.load(f)
 
+        # 3. Initialize Auth Stub
         auth_cfg = cfg["services"]["auth_service"]
         auth_addr = f'{auth_cfg["host"]}:{auth_cfg["port"]}'
-        
         self.auth_channel = grpc.insecure_channel(auth_addr)
         self.auth_stub = auth_pb2_grpc.AuthServiceStub(self.auth_channel)
         logger.info("Connected Auth Service stub for validation at %s", auth_addr)
+        
+        # 4. Initialize Payment Stub 
+        payment_cfg = cfg["services"]["payment_service"]
+        payment_addr = f'{payment_cfg["host"]}:{payment_cfg["port"]}'
+        self.payment_channel = grpc.insecure_channel(payment_addr)
+        self.payment_stub = payment_pb2_grpc.PaymentServiceStub(self.payment_channel)
+        logger.info("Connected Payment Service stub at %s", payment_addr)
+        
+        
+    # --- ADMIN RPC HANDLER ---
+    async def AddShow(self, request, context):
+        """Admin RPC to add a new show and set its seat capacity/price."""
+        
+        session_token = request.user_id 
+        
+        # 1. Validate Session Token and check for Admin user
+        try:
+            validation_req = auth_pb2.ValidateSessionRequest(token=session_token)
+            validation_resp = self.auth_stub.ValidateSession(validation_req) 
+        except Exception as e:
+            logger.error("Auth service call failed: %s", e)
+            context.set_code(grpc.StatusCode.UNAVAILABLE)
+            return booking_pb2.AddShowResponse(success=False, message="Authentication service unavailable.")
 
+        if not validation_resp.valid or validation_resp.user_id != ADMIN_ID:
+            context.set_code(grpc.StatusCode.PERMISSION_DENIED)
+            context.set_details("Only the admin user can perform this operation.")
+            return booking_pb2.AddShowResponse(success=False, message="Permission denied. Admin access required.")
+        
+        # 2. Proceed with add_show
+        try:
+            success = await self.seat_manager.add_show(
+                request.show_id, request.total_seats, request.price_cents
+            )
+            if success:
+                 return booking_pb2.AddShowResponse(success=True, message=f"Show {request.show_id} added/updated successfully.")
+            else:
+                 context.set_code(grpc.StatusCode.FAILED_PRECONDITION)
+                 context.set_details("Raft node is not the leader or proposal failed.")
+                 return booking_pb2.AddShowResponse(success=False, message="Show update failed (not leader or proposal failed).")
+
+        except PermissionError:
+             context.set_code(grpc.StatusCode.FAILED_PRECONDITION)
+             context.set_details("Booking node is not the Raft leader.")
+             return booking_pb2.AddShowResponse(success=False, message="Show update failed: Current node is not the Raft leader.")
+        except Exception as e:
+             logger.error("Admin show proposal failed: %s", e)
+             return booking_pb2.AddShowResponse(success=False, message="Internal error during show update.")
+        
+
+    # --- CORE BOOKING LOGIC ---
     async def BookSeat(self, request, context):
-        # 1. Use request.user_id field to pass the session_token
+        # 1. Auth Validation 
         session_token = request.user_id 
         seat_id = request.seat_id
-        
-        # 2. Validate Session Token via Auth Service
+        show_id = request.show_id
+        card_number = request.payment_token # Retrieve card number from payment_token field
+
         try:
-            validation_req = auth_pb2.ValidateSessionRequest(
-                token=session_token
-            )
-            # Synchronous call to Auth Service is acceptable in this async context
+            validation_req = auth_pb2.ValidateSessionRequest(token=session_token)
             validation_resp = self.auth_stub.ValidateSession(validation_req) 
         except Exception as e:
             logger.error("Auth service call failed: %s", e)
             context.set_code(grpc.StatusCode.UNAVAILABLE)
             context.set_details("Authentication service unavailable.")
-            return booking_pb2.BookResponse(
-                success=False,
-                message="Authentication service unavailable.",
-                booking_id=0,
-                seat=None
-            )
+            return booking_pb2.BookResponse(success=False, message="Authentication service unavailable.", booking_id="", seat=None)
 
         if not validation_resp.valid:
             context.set_code(grpc.StatusCode.UNAUTHENTICATED)
             context.set_details("Invalid or expired session token.")
-            return booking_pb2.BookResponse(
+            return booking_pb2.BookResponse(success=False, message="Authentication failed. Please log in.", booking_id="", seat=None)
+
+        authenticated_user_id = validation_resp.user_id
+        
+        # 2. Price Lookup
+        price_cents = self.seat_manager.get_show_price(show_id)
+        if price_cents is None:
+             return booking_pb2.BookResponse(
                 success=False,
-                message="Authentication failed. Please log in.",
-                booking_id=0,
+                message=f"Booking failed: Show ID '{show_id}' not found or price not set.",
+                booking_id="",
                 seat=None
             )
 
-        # Use the authenticated user_id for the booking
-        authenticated_user_id = validation_resp.user_id
-        
-        # 3. Proceed with booking using the authenticated user_id
+        # 3. Call Payment Service
         try:
-            # AWAIT is CORRECT here
-            seat = await self.seat_manager.book_seat(seat_id, authenticated_user_id) 
+            payment_req = payment_pb2.PaymentRequest(
+                user_id=authenticated_user_id,
+                payment_method_id="demo-card", 
+                currency="USD", 
+                amount_cents=price_cents,
+                card_number=card_number # Pass card number
+            )
+            payment_resp = self.payment_stub.ProcessPayment(payment_req)
+        except Exception as e:
+            logger.error("Payment service call failed: %s", e)
+            context.set_code(grpc.StatusCode.UNAVAILABLE)
+            context.set_details("Payment service unavailable.")
+            return booking_pb2.BookResponse(
+                success=False,
+                message="Payment service unavailable.",
+                booking_id="",
+                seat=None
+            )
+
+        if not payment_resp.success or payment_resp.status != "COMPLETED":
+            context.set_code(grpc.StatusCode.ABORTED)
+            context.set_details("Payment failed.")
+            return booking_pb2.BookResponse(
+                success=False,
+                message=f"Payment failed: {payment_resp.message}",
+                booking_id="",
+                seat=None
+            )
+            
+        transaction_id = payment_resp.transaction_id
+        
+        # 4. Proceed with booking (only if payment succeeded)
+        try:
+            seat = await self.seat_manager.book_seat(show_id, seat_id, authenticated_user_id, transaction_id) 
         except PermissionError:
-             # Handle case where the node is not the Raft leader
              context.set_code(grpc.StatusCode.FAILED_PRECONDITION)
              context.set_details("Booking node is not the Raft leader.")
              return booking_pb2.BookResponse(
                 success=False,
                 message="Booking failed: Current node is not the Raft leader.",
-                booking_id=0,
+                booking_id="",
                 seat=None
             )
         except Exception as e:
@@ -107,18 +176,15 @@ class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
              context.set_details("Internal error during booking proposal.")
              return booking_pb2.BookResponse(
                 success=False,
-                message="Booking failed due to internal error.",
-                booking_id=0,
+                message="Booking failed due to internal error. (Payment was successful but needs refund).",
+                booking_id="",
                 seat=None
             )
         
         if seat:
-            # If 'seat' is a coroutine here, it means something is wrong with the code 
-            # returned by self.seat_manager.book_seat's awaitable. 
-            # Assuming seat_manager.py is fixed, this should work.
             return booking_pb2.BookResponse(
                 success=True,
-                message="Seat booked successfully",
+                message=f"Seat booked successfully (Txn ID: {transaction_id})",
                 booking_id=seat.booking_id,
                 seat=booking_pb2.Seat(
                     seat_id=seat.seat_id,
@@ -126,20 +192,22 @@ class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
                     reserved=seat.reserved,
                     reserved_by=seat.reserved_by,
                     reserved_at=seat.reserved_at,
-                    booking_id=seat.booking_id
+                    booking_id=seat.booking_id,
+                    price_cents=seat.price_cents,
                 )
             )
         else:
+            # FIX: Clearer message when seat is unavailable (already booked or invalid/out of range)
             return booking_pb2.BookResponse(
                 success=False,
-                message="Seat already booked or invalid",
-                booking_id=0,
+                message="Booking failed: Seat is already reserved or seat ID is invalid/out of range.",
+                booking_id="",
                 seat=None
             )
             
+    # --- QUERY LOGIC ---
     async def QuerySeat(self, request, context):
-        # FIX: MUST AWAIT query_seat, as it is now an async method
-        seat = await self.seat_manager.query_seat(request.seat_id)
+        seat = await self.seat_manager.query_seat(request.show_id, request.seat_id)
         if seat:
             return booking_pb2.QueryResponse(
                 available=not seat.reserved,
@@ -150,6 +218,7 @@ class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
                     reserved_by=seat.reserved_by,
                     reserved_at=seat.reserved_at,
                     booking_id=seat.booking_id,
+                    price_cents=seat.price_cents,
                 )
             )
         else:
@@ -158,12 +227,11 @@ class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
                 seat=None
             )
 
+    # --- LIST LOGIC ---
     async def ListSeats(self, request, context):
-        # FIX: MUST AWAIT list_seats, as it is now an async method
         seats, next_token = await self.seat_manager.list_seats(
             request.show_id, request.page_size, request.page_token
         )
-        # Note: 'seats' is a list of Seat objects here.
         return booking_pb2.ListSeatsResponse(
             seats=[
                 booking_pb2.Seat(
@@ -172,7 +240,8 @@ class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
                     reserved=s.reserved,
                     reserved_by=s.reserved_by,
                     reserved_at=s.reserved_at,
-                    booking_id=s.booking_id
+                    booking_id=s.booking_id,
+                    price_cents=s.price_cents,
                 ) for s in seats
             ],
             next_page_token=next_token

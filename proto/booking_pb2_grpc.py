@@ -37,6 +37,11 @@ class BookingServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.AddShow = channel.unary_unary(
+                '/booking.BookingService/AddShow',
+                request_serializer=booking__pb2.AddShowRequest.SerializeToString,
+                response_deserializer=booking__pb2.AddShowResponse.FromString,
+                _registered_method=True)
         self.BookSeat = channel.unary_unary(
                 '/booking.BookingService/BookSeat',
                 request_serializer=booking__pb2.BookRequest.SerializeToString,
@@ -60,8 +65,16 @@ class BookingServiceServicer(object):
     to ensure consistency across booking nodes.
     """
 
+    def AddShow(self, request, context):
+        """Admin RPC: Add a new show or update seat capacity/price for an existing show.
+        <--- NEW RPC
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def BookSeat(self, request, context):
-        """Book a specific seat for a user (goes through Raft).
+        """Book a specific seat for a user (goes through Payment -> Raft).
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -84,6 +97,11 @@ class BookingServiceServicer(object):
 
 def add_BookingServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'AddShow': grpc.unary_unary_rpc_method_handler(
+                    servicer.AddShow,
+                    request_deserializer=booking__pb2.AddShowRequest.FromString,
+                    response_serializer=booking__pb2.AddShowResponse.SerializeToString,
+            ),
             'BookSeat': grpc.unary_unary_rpc_method_handler(
                     servicer.BookSeat,
                     request_deserializer=booking__pb2.BookRequest.FromString,
@@ -112,6 +130,33 @@ class BookingService(object):
     The actual booking operation should be applied via the Raft state machine
     to ensure consistency across booking nodes.
     """
+
+    @staticmethod
+    def AddShow(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/booking.BookingService/AddShow',
+            booking__pb2.AddShowRequest.SerializeToString,
+            booking__pb2.AddShowResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
 
     @staticmethod
     def BookSeat(request,

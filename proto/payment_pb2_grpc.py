@@ -26,10 +26,7 @@ if _version_not_supported:
 
 
 class PaymentServiceStub(object):
-    """Payment service for charging users when booking a seat.
-    Designed as a simple RPC gateway to a payment processor or mock.
-
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
         """Constructor.
@@ -50,10 +47,7 @@ class PaymentServiceStub(object):
 
 
 class PaymentServiceServicer(object):
-    """Payment service for charging users when booking a seat.
-    Designed as a simple RPC gateway to a payment processor or mock.
-
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def ProcessPayment(self, request, context):
         """Charge a user / token and return transaction result.
@@ -91,10 +85,7 @@ def add_PaymentServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class PaymentService(object):
-    """Payment service for charging users when booking a seat.
-    Designed as a simple RPC gateway to a payment processor or mock.
-
-    """
+    """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def ProcessPayment(request,

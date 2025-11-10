@@ -9,7 +9,10 @@ option go_package = "github.com/example/distributed-ticket-booking/proto/booking
 // The actual booking operation should be applied via the Raft state machine
 // to ensure consistency across booking nodes.
 service BookingService {
-  // Book a specific seat for a user (goes through Raft).
+  // Admin RPC: Add a new show or update seat capacity/price for an existing show.
+  rpc AddShow(AddShowRequest) returns (AddShowResponse); // <--- NEW RPC
+  
+  // Book a specific seat for a user (goes through Payment -> Raft).
   rpc BookSeat(BookRequest) returns (BookResponse);
 
   // Query seat availability.
@@ -19,20 +22,33 @@ service BookingService {
   rpc ListSeats(ListSeatsRequest) returns (ListSeatsResponse);
 }
 
+// <--- NEW MESSAGES FOR ADMIN RPC
+message AddShowRequest {
+  string user_id = 1;         // User's session token (must be Admin)
+  string show_id = 2;         // The show/event ID
+  int32 total_seats = 3;      // Total number of seats available
+  int64 price_cents = 4;      // Price of a single seat in cents
+}
+
+message AddShowResponse {
+  bool success = 1;
+  string message = 2;
+}
+// ---> END NEW MESSAGES
+
 message BookRequest {
-  string user_id = 1;            // ID of the user making the booking
-  int32 seat_id = 2;            // seat number / id
-  string show_id = 3;           // optional show or event id
-  string correlation_id = 4;    // client correlation id for tracing
-  // optionally include payment info token (or payment is separate service)
-  string payment_token = 5;
+  string user_id = 1; // ID of the user making the booking (session_token in this implementation)
+  int32 seat_id = 2; // seat number / id
+  string show_id = 3; // optional show or event id
+  string correlation_id = 4; // client correlation id for tracing
+  string payment_token = 5; // Ignored: Payment is now handled server-side.
 }
 
 message BookResponse {
   bool success = 1;
-  string message = 2;           // human readable reason / error
-  int64 booking_id = 3;         // unique booking id (if success)
-  Seat seat = 4;                // resulting seat state
+  string message = 2;
+  string booking_id = 3;
+  Seat seat = 4;
 }
 
 message QueryRequest {
@@ -60,7 +76,8 @@ message Seat {
   int32 seat_id = 1;
   string show_id = 2;
   bool reserved = 3;
-  string reserved_by = 4;     // user_id who reserved or empty
-  int64 reserved_at = 5;      // unix epoch ms
-  int64 booking_id = 6;       // link to booking record (if booked)
+  string reserved_by = 4;
+  int64 reserved_at = 5;
+  string booking_id = 6;
+  int64 price_cents = 7;
 }
