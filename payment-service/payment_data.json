@@ -1,0 +1,34 @@
+{
+  "90d261e1-1c35-48e1-9a75-37699c9e2c80": {
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "amount_cents": 1000,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1762803654,
+    "card_number_masked": "XXXX-XXXX-XXXX-4567"
+  },
+  "fba7fe4a-efe2-4652-baa5-46ff0df97afd": {
+    "user_id": "ac95dcb5-634d-4936-8730-cc122f7f8c4b",
+    "amount_cents": 1000,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1762803706,
+    "card_number_masked": "XXXX-XXXX-XXXX-2345"
+  },
+  "f7534023-0692-45b7-89da-71850cb240e3": {
+    "user_id": "ac95dcb5-634d-4936-8730-cc122f7f8c4b",
+    "amount_cents": 1000,
+    "currency": "USD",
+    "status": "FAILED",
+    "created_at": 1762803717,
+    "card_number_masked": "XXXX-XXXX-XXXX-9999"
+  },
+  "66fb7793-6513-4176-a995-d3fd74746457": {
+    "user_id": "ac95dcb5-634d-4936-8730-cc122f7f8c4b",
+    "amount_cents": 1000,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1762803728,
+    "card_number_masked": "XXXX-XXXX-XXXX-1235"
+  }
+}

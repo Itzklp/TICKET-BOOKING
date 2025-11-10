@@ -1,0 +1,16 @@
+{
+  "users": {
+    "admin@gmail.com": {
+      "password": "admin123",
+      "user_id": "00000000-0000-0000-0000-000000000000"
+    },
+    "kalp@gmail.com": {
+      "password": "123",
+      "user_id": "ac95dcb5-634d-4936-8730-cc122f7f8c4b"
+    }
+  },
+  "sessions": {
+    "3bb57df6-7101-4e78-889b-7bc91e3051b6": "00000000-0000-0000-0000-000000000000",
+    "0583ba82-19b8-4467-b17f-25e8cce3da05": "ac95dcb5-634d-4936-8730-cc122f7f8c4b"
+  }
+}

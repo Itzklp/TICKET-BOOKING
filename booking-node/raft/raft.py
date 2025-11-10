@@ -154,7 +154,19 @@ class RaftNode:
 
         if self.role == "candidate" and votes_received >= self.majority:
             await self._transition_to_leader()
+            return # Election won, exit
             
+        # FIX: If election is lost, explicitly step down to Follower.
+        # This ensures a clean state and reliance on the next election timeout.
+        if self.role == "candidate" and votes_received < self.majority:
+             self.role = "follower"
+             self.leader_id = None
+             # The timer was already reset at the start of _start_election.
+             logger.info("Election lost in term %d (votes: %d). Stepping down to follower and waiting for next timeout.",
+                         self.current_term, votes_received)
+             # The function returns, and the _run_loop continues.
+
+
     async def _transition_to_leader(self):
         """Transition to Leader state and initialize volatile state."""
         self.role = "leader"
@@ -183,10 +195,12 @@ class RaftNode:
     # --- RPC Helpers (Network Communication) ---
     async def _send_request_vote(self, peer_id: str, request: raft_pb2.RequestVoteRequest) -> Optional[raft_pb2.RequestVoteResponse]:
         """Send a RequestVote RPC to a single peer."""
+        # Fix: Use a dedicated, slightly longer RPC timeout to prevent premature network failure
+        REQUEST_VOTE_RPC_TIMEOUT = ELECTION_TIMEOUT_MIN / 2 
         try:
             stub = self.peer_stubs[peer_id]
-            # Use a short timeout for elections
-            response = await stub.RequestVote(request, timeout=HEARTBEAT_INTERVAL) 
+            # Use REQUEST_VOTE_RPC_TIMEOUT for the RPC call
+            response = await stub.RequestVote(request, timeout=REQUEST_VOTE_RPC_TIMEOUT) 
             return response
         except grpc.aio.AioRpcError:
             # RPC failed (e.g., peer unavailable, timeout)
@@ -289,9 +303,7 @@ class RaftNode:
 
     # --- RPC Handlers for RaftServicer ---
     async def handle_request_vote(self, request: raft_pb2.RequestVoteRequest) -> raft_pb2.RequestVoteResponse:
-        # Implementation of Raft voting logic (Term check, vote criteria, log up-to-date check)
         
-        # ... (implementation from thought process)
         if request.term < self.current_term:
             return raft_pb2.RequestVoteResponse(term=self.current_term, vote_granted=False)
         if request.term > self.current_term:
@@ -320,9 +332,7 @@ class RaftNode:
 
 
     async def handle_append_entries(self, request: raft_pb2.AppendEntriesRequest) -> raft_pb2.AppendEntriesResponse:
-        # Implementation of Raft log replication/heartbeat logic
         
-        # ... (implementation from thought process)
         if request.term < self.current_term:
             return raft_pb2.AppendEntriesResponse(term=self.current_term, success=False)
             
@@ -427,7 +437,7 @@ class RaftNode:
 
     # --- Query API (Modified) ---
     def get_seat_state(self, show_id: str, seat_id: int):
-        return self.state_machine.query(seat_id)
+        return self.state_machine.query(show_id, seat_id)
 
     def is_leader(self) -> bool:
         return self.role == "leader"
