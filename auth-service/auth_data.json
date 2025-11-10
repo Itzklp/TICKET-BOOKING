@@ -7,10 +7,15 @@
     "kalp@gmail.com": {
       "password": "123",
       "user_id": "ac95dcb5-634d-4936-8730-cc122f7f8c4b"
+    },
+    "abc@gmail.com": {
+      "password": "abc",
+      "user_id": "980a42c4-7286-416c-9889-11e1e9ce9694"
     }
   },
   "sessions": {
     "3bb57df6-7101-4e78-889b-7bc91e3051b6": "00000000-0000-0000-0000-000000000000",
-    "0583ba82-19b8-4467-b17f-25e8cce3da05": "ac95dcb5-634d-4936-8730-cc122f7f8c4b"
+    "0583ba82-19b8-4467-b17f-25e8cce3da05": "ac95dcb5-634d-4936-8730-cc122f7f8c4b",
+    "cb2707ee-4234-4a06-8c38-e7e2cdd62b29": "980a42c4-7286-416c-9889-11e1e9ce9694"
   }
 }
