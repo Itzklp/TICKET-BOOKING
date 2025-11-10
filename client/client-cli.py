@@ -236,7 +236,7 @@ def main():
     payment_channel = grpc.insecure_channel("127.0.0.1:6000")
     payment_stub = payment_pb2_grpc.PaymentServiceStub(payment_channel)
 
-    chatbot_channel = grpc.insecure_channel("127.0.0.1:7000")
+    chatbot_channel = grpc.insecure_channel("127.0.0.1:9000")
     chatbot_stub = chatbot_pb2_grpc.ChatbotStub(chatbot_channel)
     
     auth_channel = grpc.insecure_channel("127.0.0.1:8000") 
