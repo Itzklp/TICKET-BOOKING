@@ -248,3 +248,4 @@ The Raft consensus algorithm comes from the paper "In Search of an Understandabl
 ---
 
 This system demonstrates distributed consensus and microservices architecture. It's designed for educational exploration of how booking platforms maintain consistency across multiple servers.
+# Ticket_booking_system
