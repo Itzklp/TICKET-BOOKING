@@ -118,7 +118,7 @@ class StateMachine:
         if seat_id <= 0 or seat_id > show["total_seats"]:
              return {"reserved": True, "user_id": None, "exists": False} # Out of range for this show
 
-        record = show["seats"].get(seat_id)
+        record = show["seats"].get(str(seat_id)) # <--- FIX APPLIED HERE
 
         if record:
             return {**record, "exists": True}
@@ -140,7 +140,7 @@ class StateMachine:
              return # Fails silently, preventing state mutation
         # -----------------------------------------------------------
 
-        record = show["seats"].get(seat_id)
+        record = show["seats"].get(str(seat_id)) # <--- FIX 1 APPLIED HERE
         
         # If already reserved (committed booking from Raft)
         if record and record.get("reserved"):
@@ -157,7 +157,7 @@ class StateMachine:
         }
 
         # Save the new record directly to the seats dictionary
-        show["seats"][seat_id] = new_record
+        show["seats"][str(seat_id)] = new_record # <--- FIX 2 APPLIED HERE
         
         logger.info("Seat %s in show %s reserved by %s (Txn ID: %s)", seat_id, show_id, user_id, booking_id)
 
@@ -168,7 +168,7 @@ class StateMachine:
             logger.warning("Show %s not found; cannot release seat %s", show_id, seat_id)
             return
 
-        record = show["seats"].get(seat_id)
+        record = show["seats"].get(str(seat_id)) # FIX: Use string key
         if not record:
             logger.info("Seat %s not found in state; cannot release", seat_id)
             return

@@ -70,7 +70,7 @@ def add_show(stub):
         return
         
     if not session_token:
-        print("\n[ERROR] You must log in first (Option 6).\n")
+        print("\n[ERROR] You must log in first (Option 7).\n")
         return
         
     show_id = input("Enter Show ID (e.g., concert_2025): ")
@@ -142,7 +142,7 @@ def add_show(stub):
 def book_seat(stub):
     global session_token, cli_user_id, CURRENT_BOOKING_TARGET
     if not session_token:
-        print("\n[ERROR] You must log in first (Option 6) to book a seat.\n")
+        print("\n[ERROR] You must log in first (Option 7) to book a seat.\n")
         return
     
     seat_id = int(input("Enter seat ID: "))
@@ -276,6 +276,109 @@ def query_seat(stub):
         print("\n[CRITICAL] Query failed: Could not connect to any booking node or an unhandled error occurred.\n")
 
 
+def list_all_seats(stub):
+    """
+    Fetches all seats for a show and displays them in a matrix.
+    A read operation should work on any available follower/leader node.
+    """
+    global CURRENT_BOOKING_TARGET
+    
+    show_id = input("Enter show ID (e.g., dj_2025): ")
+    
+    # We will try all known peers, starting from the current target
+    peers_to_try = [CURRENT_BOOKING_TARGET] + [p for p in BOOKING_PEERS if p != CURRENT_BOOKING_TARGET]
+
+    all_seats = []
+    success = False
+    
+    for peer_addr in peers_to_try:
+        try:
+            # 1. Update the current target connection if necessary
+            if peer_addr != CURRENT_BOOKING_TARGET:
+                 print(f"[RETRY] Redirecting query to next peer: {peer_addr}")
+                 CURRENT_BOOKING_TARGET = peer_addr
+                 # Re-create the stub for the new address
+                 channel = grpc.insecure_channel(CURRENT_BOOKING_TARGET)
+                 stub = booking_pb2_grpc.BookingServiceStub(channel)
+                 
+            print(f"[ATTEMPT] Trying ListSeats via {CURRENT_BOOKING_TARGET}...")
+
+            # 2. Handle pagination - loop until next_page_token is 0
+            current_page_token = 0
+            while True:
+                request = booking_pb2.ListSeatsRequest(
+                    show_id=show_id, 
+                    page_size=50,  # Fetch in chunks of 50
+                    page_token=current_page_token
+                )
+                
+                response = stub.ListSeats(request)
+                
+                if not response.seats and not all_seats:
+                    # Show might not exist or has 0 seats
+                    print(f"\nNo seats found for show '{show_id}' via {CURRENT_BOOKING_TARGET}.\n")
+                    return # Exit function
+                
+                all_seats.extend(response.seats)
+                
+                if response.next_page_token == 0:
+                    break # All pages fetched
+                current_page_token = response.next_page_token
+
+            success = True
+            break # Succeeded, exit peer retry loop
+            
+        except grpc.RpcError as e:
+            # Handle connection errors (UNAVAILABLE)
+            if e.code() == grpc.StatusCode.UNAVAILABLE:
+                print(f"[ERROR] Node {peer_addr} is unavailable. Trying next peer...")
+                continue
+            else:
+                # Handle other unrecoverable errors 
+                print(f"[ERROR] Unhandled RPC error connecting to {peer_addr}: {e.details()}")
+                break
+        except Exception as e:
+            print(f"[FATAL] Unexpected error: {e}")
+            break
+
+    # --- End Dynamic Retry Loop ---
+    
+    if not success:
+        print("\n[CRITICAL] ListSeats failed: Could not connect to any booking node.\n")
+        return
+
+    # --- Display Matrix ---
+    if not all_seats:
+        print(f"No seats configured for show '{show_id}'.")
+        return
+
+    print(f"\n--- Seat Matrix for Show: '{show_id}' (via {CURRENT_BOOKING_TARGET}) ---")
+    print(" [ X ] = Booked    [ # ] = Available\n")
+    
+    # Sort seats by ID to ensure correct order
+    all_seats.sort(key=lambda s: s.seat_id)
+    
+    # Assume 10 seats per row for display
+    seats_per_row = 10
+    row_str = ""
+    for seat in all_seats:
+        if seat.reserved:
+            row_str += " [ X ] "
+        else:
+            # Pad seat number for alignment
+            row_str += f" [{seat.seat_id:^3}] "
+        
+        if seat.seat_id % seats_per_row == 0:
+            print(row_str)
+            row_str = ""
+    
+    # Print any remaining seats in the last row
+    if row_str:
+        print(row_str)
+    
+    print("\n" + ("-" * (seats_per_row * 7)) + "\n")
+
+
 def ask_chatbot(chatbot_stub):
     msg = input("You: ")
     response = chatbot_stub.Ask(
@@ -333,13 +436,14 @@ def main():
         
         print(f"\n=== Distributed Ticket Booking CLI ({status_line} - Target: {CURRENT_BOOKING_TARGET}) ===")
         print("1. Book a Seat (Requires Login)")
-        print("2. Query Seat")
-        print("3. Process Payment (Standalone Test)")
-        print("4. Chat with Chatbot")
-        print("5. Register User (Auth)") 
-        print("6. Login User (Auth)")    
-        print("7. Admin: Add/Update Show (Requires Admin Login)") 
-        print("8. Exit")                 
+        print("2. Query Single Seat")
+        print("3. List All Seats (Seat Matrix)") # <-- NEW OPTION
+        print("4. Process Payment (Standalone Test)")
+        print("5. Chat with Chatbot")
+        print("6. Register User (Auth)") 
+        print("7. Login User (Auth)")    
+        print("8. Admin: Add/Update Show (Requires Admin Login)") 
+        print("9. Exit")                 # <-- UPDATED EXIT NUMBER
 
         choice = input("Select option: ")
 
@@ -348,16 +452,18 @@ def main():
         elif choice == "2":
             query_seat(booking_stub)
         elif choice == "3":
-            process_payment(payment_stub)
+            list_all_seats(booking_stub) # <-- NEW HANDLER
         elif choice == "4":
-            ask_chatbot(chatbot_stub)
+            process_payment(payment_stub)
         elif choice == "5":
-            register_user(auth_stub) 
+            ask_chatbot(chatbot_stub)
         elif choice == "6":
-            login_user(auth_stub)    
+            register_user(auth_stub) 
         elif choice == "7":
-            add_show(booking_stub)
+            login_user(auth_stub)    
         elif choice == "8":
+            add_show(booking_stub)
+        elif choice == "9":               # <-- UPDATED EXIT NUMBER
             break
         else:
             print("Invalid choice.")

@@ -63,7 +63,7 @@ class RaftNode:
         self._election_timeout: float = self._get_new_election_timeout()
         self._last_heartbeat_sent: float = time.time()
         self._last_heartbeat_received: float = time.time()
-        # {log_index: Future} - Futures are resolved upon commit
+        # {log_index: Future} - Futures are resolved upon *apply*
         self.proposals: Dict[int, asyncio.Future] = {} 
 
     def _setup_peer_stubs(self):
@@ -291,10 +291,13 @@ class RaftNode:
                     self.commit_index = N
                     logger.info("Log index %d committed for term %d.", N, self.current_term)
                     
-                    # Resolve proposal future if it exists
-                    if N in self.proposals:
-                        self.proposals[N].set_result(True)
-                        del self.proposals[N]
+                    # --- BUGFIX 1: REMOVED ---
+                    # The future is now resolved in _apply_committed
+                    # to prevent the race condition.
+                    #
+                    # if N in self.proposals:
+                    #     self.proposals[N].set_result(True)
+                    #     del self.proposals[N]
                 else:
                     break # Cannot commit log from previous term
             else:
@@ -391,13 +394,20 @@ class RaftNode:
             if entry:
                 logger.debug("Applying log entry %s", entry)
                 self.state_machine.apply(entry.command)
+
+                # --- BUGFIX 2: MOVED HERE ---
+                # Resolve the proposal Future *after* the command
+                # has been applied to the state machine.
+                if self.last_applied in self.proposals:
+                    self.proposals[self.last_applied].set_result(True)
+                    del self.proposals[self.last_applied]
             else:
                 logger.error("Commit index %d references a missing log entry!", self.last_applied)
 
 
     # --- API: Command Proposal (Client-facing) ---
     async def propose(self, command: bytes) -> int:
-        """Proposes a command and waits for it to be committed."""
+        """Proposes a command and waits for it to be *applied*."""
         if self.role != "leader":
             raise PermissionError("Only the leader can propose commands.")
             
@@ -410,7 +420,7 @@ class RaftNode:
         # 1. Leader appends to local log
         self.log.append(entry)
         
-        # Setup Future to wait for commit
+        # Setup Future to wait for *apply*
         future = asyncio.Future()
         self.proposals[entry.index] = future
         
@@ -419,14 +429,14 @@ class RaftNode:
         # 2. Send AppendEntries to all followers
         await self._send_append_entries()
         
-        # 3. Wait for commit confirmation
+        # 3. Wait for apply confirmation (from _apply_committed)
         try:
             # Set a timeout for replication. If it fails, the leader may have stepped down.
             await asyncio.wait_for(future, timeout=2.0) 
             return entry.index
                 
         except asyncio.TimeoutError:
-            logger.warning("Proposal at index %d timed out waiting for commit.", entry.index)
+            logger.warning("Proposal at index %d timed out waiting for apply.", entry.index)
             if entry.index in self.proposals:
                 del self.proposals[entry.index]
             raise TimeoutError("Raft proposal timed out.")
