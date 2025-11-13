@@ -203,7 +203,7 @@ def serve():
         server
     )
     
-    # Use port 7000 to match config
+    # Use port 9000 to match config
     server.add_insecure_port("[::]:9000")
     
     logger.info("=" * 60)
