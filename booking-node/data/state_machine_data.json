@@ -14,6 +14,12 @@
         "user_id": "ac95dcb5-634d-4936-8730-cc122f7f8c4b",
         "booking_id": "fba7fe4a-efe2-4652-baa5-46ff0df97afd",
         "reserved_at": 1762803706097
+      },
+      "3": {
+        "reserved": true,
+        "user_id": "00000000-0000-0000-0000-000000000000",
+        "booking_id": "0a3e0d3c-5d8d-4cfd-9319-93479ab4936c",
+        "reserved_at": 1762936971611
       }
     }
   }
