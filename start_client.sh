@@ -2,7 +2,7 @@
 # start_client.sh
 # Opens the client CLI in a new terminal window
 
-# Get the absolute path to the project directory
+
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_PATH="$PROJECT_DIR/venv"
 
@@ -12,11 +12,11 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-echo -e "${BLUE}🚀 Launching Client CLI in new terminal...${NC}\n"
+echo -e "${BLUE} Launching Client CLI in new terminal...${NC}\n"
 
 # Check if venv exists
 if [ ! -d "$VENV_PATH" ]; then
-    echo -e "${YELLOW}⚠️  Virtual environment not found!${NC}"
+    echo -e "${YELLOW}  Virtual environment not found!${NC}"
     echo -e "${YELLOW}Please run ./start_cluster_terminals.sh first${NC}"
     exit 1
 fi
@@ -31,7 +31,7 @@ tell application "Terminal"
 end tell
 EOF
     
-    echo -e "${GREEN}✅ Client terminal opened!${NC}"
+    echo -e "${GREEN} Client terminal opened!${NC}"
 
 elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     # Linux
@@ -48,8 +48,8 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
         exit 1
     fi
     
-    echo -e "${GREEN}✅ Client terminal opened!${NC}"
+    echo -e "${GREEN} Client terminal opened!${NC}"
 else
-    echo -e "${YELLOW}⚠️  Unsupported OS: $OSTYPE${NC}"
+    echo -e "${YELLOW}  Unsupported OS: $OSTYPE${NC}"
     exit 1
 fi

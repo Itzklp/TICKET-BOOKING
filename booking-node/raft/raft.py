@@ -12,7 +12,7 @@ from proto import raft_pb2, raft_pb2_grpc
 logger = logging.getLogger("raft")
 
 # Raft Timing Constants
-HEARTBEAT_INTERVAL = 0.05  # 50 ms (Time in seconds)
+HEARTBEAT_INTERVAL = 0.05  # 50 ms 
 ELECTION_TIMEOUT_MIN = 0.150  # 150 ms
 ELECTION_TIMEOUT_MAX = 0.300  # 300 ms
 
@@ -29,48 +29,48 @@ class RaftNode:
         self.peer_stubs: Dict[str, raft_pb2_grpc.RaftStub] = {}
         self._setup_peer_stubs()
 
-        # -----------------------------------------------------------------
+
         # Persistent state (on all servers)
-        # -----------------------------------------------------------------
+
         self.current_term = 0
         self.voted_for: Optional[str] = None
         self.log = Log()
 
-        # -----------------------------------------------------------------
+
         # Volatile state (on all servers)
-        # -----------------------------------------------------------------
+
         self.commit_index = 0
         self.last_applied = 0
         self.role = "follower"
         self.leader_id: Optional[str] = None
 
-        # -----------------------------------------------------------------
+
         # Volatile state (leader only)
-        # -----------------------------------------------------------------
+
         self.next_index: Dict[str, int] = {} 
         self.match_index: Dict[str, int] = {} 
         
-        # -----------------------------------------------------------------
+
         # Application state
-        # -----------------------------------------------------------------
+
         self.state_machine = StateMachine()
 
-        # -----------------------------------------------------------------
+
         # Timers and Control
-        # -----------------------------------------------------------------
+
         self._running = False
         self._run_task: Optional[asyncio.Task] = None
         self._election_timeout: float = self._get_new_election_timeout()
         self._last_heartbeat_sent: float = time.time()
         self._last_heartbeat_received: float = time.time()
-        # {log_index: Future} - Futures are resolved upon *apply*
+
         self.proposals: Dict[int, asyncio.Future] = {} 
 
     def _setup_peer_stubs(self):
         """Initializes gRPC channels and stubs for all peers."""
         for peer in self.peers:
             addr = f'{peer["host"]}:{peer["port"]}'
-            # Note: Using grpc.aio.insecure_channel for async gRPC
+
             channel = grpc.aio.insecure_channel(addr)
             self.peer_stubs[peer["node_id"]] = raft_pb2_grpc.RaftStub(channel)
 
@@ -108,7 +108,7 @@ class RaftNode:
                 if current_time - self._last_heartbeat_received >= self._election_timeout:
                     await self._start_election()
 
-            await asyncio.sleep(0.01) # Short sleep to yield control
+            await asyncio.sleep(0.01) 
 
     # --- State Transitions and Election ---
 
@@ -119,8 +119,8 @@ class RaftNode:
         self.voted_for = self.node_id
         self.leader_id = None
         
-        self._last_heartbeat_received = time.time() # Reset election timer
-        self._election_timeout = self._get_new_election_timeout() # New randomized timeout
+        self._last_heartbeat_received = time.time() 
+        self._election_timeout = self._get_new_election_timeout() 
         
         last_log_index = self.log.last_index
         last_log_term = self.log.get(last_log_index).term if last_log_index > 0 and self.log.get(last_log_index) else 0
@@ -168,7 +168,7 @@ class RaftNode:
 
 
     async def _transition_to_leader(self):
-        """Transition to Leader state and initialize volatile state."""
+        """Transition to Leader state."""
         self.role = "leader"
         self.leader_id = self.node_id
         
@@ -216,13 +216,13 @@ class RaftNode:
             
             entries_to_send = []
             if not is_heartbeat:
-                # Send log entries starting from next_idx
+
                 for entry in self.log.entries_from(next_idx):
                     entries_to_send.append(
                         raft_pb2.LogEntry(
                             index=entry.index,
                             term=entry.term,
-                            command=entry.command.decode() # Command is JSON string in proto
+                            command=entry.command.decode() 
                         )
                     )
             
@@ -239,7 +239,6 @@ class RaftNode:
                 leader_commit=self.commit_index
             )
             
-            # Non-blocking call to peer to handle response asynchronously
             asyncio.create_task(self._call_append_entries(p_id, request))
 
     async def _call_append_entries(self, peer_id: str, request: raft_pb2.AppendEntriesRequest):
@@ -255,7 +254,7 @@ class RaftNode:
             if self.role != "leader": return
 
             if response.success:
-                # Successful replication, update matchIndex and nextIndex
+
                 new_match_index = request.prev_log_index + len(request.entries)
                 self.match_index[peer_id] = new_match_index
                 self.next_index[peer_id] = new_match_index + 1
@@ -264,12 +263,12 @@ class RaftNode:
                     self._check_for_commit()
                 
             else:
-                # Log inconsistency, decrement nextIndex and retry
+
                 self.next_index[peer_id] = max(1, self.next_index[peer_id] - 1)
                 await self._send_append_entries(peer_id=peer_id)
                 
         except grpc.aio.AioRpcError:
-            pass # Retry happens in next heartbeat
+            pass 
         except Exception as e:
             logger.error("Error during AppendEntries response handling for %s: %s", peer_id, e)
 
@@ -279,7 +278,7 @@ class RaftNode:
 
         max_log_index = self.log.last_index
         for N in range(self.commit_index + 1, max_log_index + 1):
-            # Count replicas that have replicated log entry N (including leader)
+
             replicated_count = 1 
             for match_index in self.match_index.values():
                 if match_index >= N:
@@ -291,17 +290,10 @@ class RaftNode:
                     self.commit_index = N
                     logger.info("Log index %d committed for term %d.", N, self.current_term)
                     
-                    # --- BUGFIX 1: REMOVED ---
-                    # The future is now resolved in _apply_committed
-                    # to prevent the race condition.
-                    #
-                    # if N in self.proposals:
-                    #     self.proposals[N].set_result(True)
-                    #     del self.proposals[N]
                 else:
-                    break # Cannot commit log from previous term
+                    break 
             else:
-                break # No majority for N
+                break 
         
 
     # --- RPC Handlers for RaftServicer ---
@@ -395,9 +387,6 @@ class RaftNode:
                 logger.debug("Applying log entry %s", entry)
                 self.state_machine.apply(entry.command)
 
-                # --- BUGFIX 2: MOVED HERE ---
-                # Resolve the proposal Future *after* the command
-                # has been applied to the state machine.
                 if self.last_applied in self.proposals:
                     self.proposals[self.last_applied].set_result(True)
                     del self.proposals[self.last_applied]
@@ -417,7 +406,7 @@ class RaftNode:
             command=command,
         )
         
-        # 1. Leader appends to local log
+        #  Leader appends to local log
         self.log.append(entry)
         
         # Setup Future to wait for *apply*
@@ -426,10 +415,10 @@ class RaftNode:
         
         logger.info("Proposed command appended locally at index %d. Starting replication.", entry.index)
         
-        # 2. Send AppendEntries to all followers
+        #  Send AppendEntries to all followers
         await self._send_append_entries()
         
-        # 3. Wait for apply confirmation (from _apply_committed)
+        #  Wait for apply confirmation (from _apply_committed)
         try:
             # Set a timeout for replication. If it fails, the leader may have stepped down.
             await asyncio.wait_for(future, timeout=2.0) 
@@ -445,7 +434,7 @@ class RaftNode:
                 del self.proposals[entry.index]
             raise e
 
-    # --- Query API (Modified) ---
+    # --- Query API ---
     def get_seat_state(self, show_id: str, seat_id: int):
         return self.state_machine.query(show_id, seat_id)
 

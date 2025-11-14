@@ -14,7 +14,7 @@ import os
 import os
 import sys
 
-# Add project root to Python path
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import proto.payment_pb2 as payment_pb2
@@ -79,10 +79,10 @@ class PaymentService(payment_pb2_grpc.PaymentServiceServicer):
             "currency": request.currency,
             "status": status,
             "created_at": int(time.time()),
-            "card_number_masked": f"XXXX-XXXX-XXXX-{request.card_number[-4:]}" # Mask for safety
+            "card_number_masked": f"XXXX-XXXX-XXXX-{request.card_number[-4:]}" 
         }
         self.transactions[txn_id] = transaction_record
-        _save_data(self.transactions) # <-- Persist data
+        _save_data(self.transactions) 
 
         return payment_pb2.PaymentResponse(
             success=success,

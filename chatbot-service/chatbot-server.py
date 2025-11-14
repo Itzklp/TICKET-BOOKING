@@ -9,7 +9,7 @@ import grpc
 import os
 import sys
 
-# Add project root to Python path
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import proto.chatbot_pb2 as chatbot_pb2
@@ -102,7 +102,7 @@ class TicketBookingAssistant:
         logger.info("Ticket Booking Assistant initialized successfully")
     
     def classify_intent(self, user_query: str) -> str:
-        """Classify user intent based on keywords (improved matching)"""
+
         query_lower = user_query.lower()
         
         # Check each intent's keywords

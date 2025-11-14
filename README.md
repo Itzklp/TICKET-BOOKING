@@ -188,7 +188,7 @@ User Request
 
 ### Step 1: Clone Repository
 ```bash
-git clone <repository-url>
+git clone <https://github.com/Itzklp/TICKET-BOOKING>
 cd distributed-ticket-booking
 ```
 
@@ -610,6 +610,16 @@ tail -f logs/booking_node_*.log
 - Check leader is replicating (logs should show AppendEntries)
 - Restart cluster if persistent
 
+#### 6. proto file disturbed when build
+**Symptoms**: import booking_pb2 as booking__pb2 not found
+
+
+
+**Solution**:
+- after building the proto files
+- open the booking_pb2_grpc.py
+- change this line to "import booking_pb2 as booking__pb2"
+- to this "from proto import booking_pb2 as booking__pb2"
 ---
 
 ##  Performance & Scalability
@@ -640,7 +650,7 @@ tail -f logs/booking_node_*.log
 
 ---
 
-## 📚 Learning Resources
+##  Learning Resources
 
 ### Raft Consensus
 - [Original Paper](https://raft.github.io/raft.pdf): "In Search of an Understandable Consensus Algorithm"

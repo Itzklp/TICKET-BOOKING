@@ -7,7 +7,7 @@ import grpc
 import os
 import sys
 
-# Add project root to Python path
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import proto.booking_pb2 as booking_pb2
@@ -33,7 +33,6 @@ BOOKING_PEERS = [
 ]
 CURRENT_BOOKING_TARGET = BOOKING_PEERS[0]
 
-# Known shows cache (populated by list_all_shows)
 available_shows = {}
 
 
@@ -155,7 +154,6 @@ def list_all_shows(stub):
                 print(f"[ERROR] Node {peer_addr} unavailable, trying next...")
                 continue
             elif e.code() == grpc.StatusCode.UNIMPLEMENTED:
-                # Fallback to old method if ListShows is not implemented
                 print(f"[WARNING] ListShows not implemented on {peer_addr}, using fallback method...")
                 return list_all_shows_fallback(stub)
             else:

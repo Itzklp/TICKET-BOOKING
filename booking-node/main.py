@@ -6,7 +6,6 @@ This script starts:
   - A gRPC server exposing the BookingService
   - A minimal Raft node loop for distributed consensus
 
-You can extend this with real Raft networking, persistence, and replication.
 """
 
 import argparse
@@ -17,23 +16,23 @@ import os
 import sys
 import grpc
 
-# Ensure the project root (e.g., "D:/Ticket Booking") is in Python path
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-# Import generated protobuf stubs and core service classes
-# Ensure the protobuf gRPC stubs are generated (e.g. with:
-# and are available on the PYTHONPATH)
+
+
+
 from proto import booking_pb2_grpc
-from proto import raft_pb2_grpc # <--- NEW IMPORT
+from proto import raft_pb2_grpc 
 
 from booking.booking_service import BookingServiceServicer
 from raft.raft import RaftNode
-from raft.raft_service import RaftServicer # <--- NEW IMPORT
+from raft.raft_service import RaftServicer 
 
 
-# -------------------------------------------------------------------------
+
 # Logging Configuration
-# -------------------------------------------------------------------------
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("booking-node")
 
@@ -41,9 +40,9 @@ logger = logging.getLogger("booking-node")
 DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
 
 
-# -------------------------------------------------------------------------
+
 # Async gRPC Server with Raft Node
-# -------------------------------------------------------------------------
+
 async def serve(config_path: str):
     """Start the gRPC Booking node and Raft consensus instance."""
     # Load configuration file
@@ -54,7 +53,7 @@ async def serve(config_path: str):
     port = cfg.get("port", 50051)
     raft_cfg = cfg.get("raft", {})
 
-    # Initialize Raft node (networking and persistence are minimal stubs)
+    # Initialize Raft node 
     raft_node = RaftNode(
         node_id=cfg.get("node_id", "node-1"),
         peers=cfg.get("peers", []),
@@ -66,7 +65,7 @@ async def serve(config_path: str):
     server = grpc.aio.server()
     booking_servicer = BookingServiceServicer(raft_node)
     
-    # Register Raft Service with gRPC server <--- NEW REGISTRATION
+    # Register Raft Service with gRPC server 
     raft_servicer = RaftServicer(raft_node)
     raft_pb2_grpc.add_RaftServicer_to_server(
         raft_servicer, server)
@@ -92,9 +91,9 @@ async def serve(config_path: str):
         await raft_node.stop()
 
 
-# -------------------------------------------------------------------------
+
 # Main Entrypoint
-# -------------------------------------------------------------------------
+
 def main():
     """CLI entrypoint for booking node."""
     parser = argparse.ArgumentParser(description="Distributed Booking Node")

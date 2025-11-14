@@ -26,7 +26,7 @@ def print_header(msg):
 def get_admin_token():
     """Login as admin."""
     print("Logging in as admin...")
-    time.sleep(2)  # Give auth service time to be ready
+    time.sleep(2)  
     
     stub = auth_pb2_grpc.AuthServiceStub(grpc.insecure_channel(AUTH_ADDR))
     login_req = auth_pb2.LoginRequest(email="admin@gmail.com", password="admin123")
@@ -88,28 +88,28 @@ def print_state(states):
     """Print cluster state."""
     for node, role in states.items():
         if role == 'leader':
-            icon = "👑"
+            icon = ""
         elif role == 'follower':
-            icon = "📦"
+            icon = ""
         elif role == 'timeout':
-            icon = "⏱️"
+            icon = "⏱"
         else:
-            icon = "💀"
+            icon = ""
         print(f"  {icon} {node}: {role.upper()}")
 
 def kill_node(node_id):
     """Kill a node."""
-    print(f"💀 Killing {node_id}...")
+    print(f" Killing {node_id}...")
     subprocess.run(["pkill", "-f", f"config-{node_id}.json"], check=False)
     time.sleep(1)
 
 def main():
-    print("\n" + "█"*60)
-    print("█  RAFT LEADER ELECTION TEST")
-    print("█"*60)
+    print("\n" + ""*60)
+    print("  RAFT LEADER ELECTION TEST")
+    print(""*60)
     
     # CRITICAL FIX: Wait for cluster to stabilize
-    print("\n⏳ Waiting for cluster to stabilize (5 seconds)...")
+    print("\n Waiting for cluster to stabilize (5 seconds)...")
     time.sleep(5)
     
     token = get_admin_token()
@@ -122,7 +122,7 @@ def main():
     leader_count = list(states.values()).count('leader')
     
     if leader_count != 1:
-        print(f"\n❌ FAIL: Expected 1 leader, found {leader_count}")
+        print(f"\n FAIL: Expected 1 leader, found {leader_count}")
         return 1
     
     print("\n✓ PASS: Exactly one leader")
@@ -133,7 +133,7 @@ def main():
     print(f"Current leader: {leader}")
     kill_node(leader)
     
-    print("\n⏳ Waiting for election (3 seconds)...")
+    print("\n Waiting for election (3 seconds)...")
     time.sleep(3)
     
     for i in range(1, 6):
@@ -150,7 +150,7 @@ def main():
                 return 0
         time.sleep(2)
     
-    print("\n❌ FAIL: No new leader elected within 10 seconds")
+    print("\n FAIL: No new leader elected within 10 seconds")
     return 1
 
 if __name__ == "__main__":

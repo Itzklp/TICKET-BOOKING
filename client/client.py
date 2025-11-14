@@ -6,7 +6,7 @@ import grpc
 import os
 import sys
 
-# Add project root to Python path
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import proto.booking_pb2 as booking_pb2
@@ -65,7 +65,7 @@ def process_payment(payment_stub):
 
 
 def main():
-    # Connect to services
+
     booking_channel = grpc.insecure_channel("127.0.0.1:50051")
     booking_stub = booking_pb2_grpc.BookingServiceStub(booking_channel)
 

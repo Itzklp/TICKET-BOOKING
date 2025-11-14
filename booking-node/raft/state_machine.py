@@ -98,7 +98,7 @@ class StateMachine:
         if seat_id <= 0 or seat_id > show["total_seats"]:
              return {"reserved": True, "user_id": None, "exists": False}
 
-        # CRITICAL FIX: Use string key
+
         record = show["seats"].get(str(seat_id))
 
         if record:
@@ -117,7 +117,7 @@ class StateMachine:
              logger.warning("Out-of-range seat %s in show %s.", seat_id, show_id)
              return
 
-        # CRITICAL FIX: Use string key
+
         record = show["seats"].get(str(seat_id))
         
         if record and record.get("reserved"):
@@ -131,7 +131,7 @@ class StateMachine:
             "reserved_at": int(time.time() * 1000) 
         }
 
-        # CRITICAL FIX: Use string key
+
         show["seats"][str(seat_id)] = new_record
         
         logger.info("Seat %s in show %s reserved by %s (Txn ID: %s)", seat_id, show_id, user_id, booking_id)
@@ -143,7 +143,7 @@ class StateMachine:
             logger.warning("Show %s not found", show_id)
             return
 
-        # CRITICAL FIX: Use string key
+
         record = show["seats"].get(str(seat_id))
         if not record:
             logger.info("Seat %s not found in state", seat_id)
