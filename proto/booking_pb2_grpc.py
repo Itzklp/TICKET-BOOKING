@@ -26,10 +26,7 @@ if _version_not_supported:
 
 
 class BookingServiceStub(object):
-    """Booking service used by clients to query and book seats.
-    The actual booking operation should be applied via the Raft state machine
-    to ensure consistency across booking nodes.
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
         """Constructor.
@@ -41,6 +38,11 @@ class BookingServiceStub(object):
                 '/booking.BookingService/AddShow',
                 request_serializer=booking__pb2.AddShowRequest.SerializeToString,
                 response_deserializer=booking__pb2.AddShowResponse.FromString,
+                _registered_method=True)
+        self.ListShows = channel.unary_unary(
+                '/booking.BookingService/ListShows',
+                request_serializer=booking__pb2.ListShowsRequest.SerializeToString,
+                response_deserializer=booking__pb2.ListShowsResponse.FromString,
                 _registered_method=True)
         self.BookSeat = channel.unary_unary(
                 '/booking.BookingService/BookSeat',
@@ -60,14 +62,17 @@ class BookingServiceStub(object):
 
 
 class BookingServiceServicer(object):
-    """Booking service used by clients to query and book seats.
-    The actual booking operation should be applied via the Raft state machine
-    to ensure consistency across booking nodes.
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def AddShow(self, request, context):
         """Admin RPC: Add a new show or update seat capacity/price for an existing show.
-        <--- NEW RPC
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListShows(self, request, context):
+        """NEW: List all available shows
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -102,6 +107,11 @@ def add_BookingServiceServicer_to_server(servicer, server):
                     request_deserializer=booking__pb2.AddShowRequest.FromString,
                     response_serializer=booking__pb2.AddShowResponse.SerializeToString,
             ),
+            'ListShows': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListShows,
+                    request_deserializer=booking__pb2.ListShowsRequest.FromString,
+                    response_serializer=booking__pb2.ListShowsResponse.SerializeToString,
+            ),
             'BookSeat': grpc.unary_unary_rpc_method_handler(
                     servicer.BookSeat,
                     request_deserializer=booking__pb2.BookRequest.FromString,
@@ -126,10 +136,7 @@ def add_BookingServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class BookingService(object):
-    """Booking service used by clients to query and book seats.
-    The actual booking operation should be applied via the Raft state machine
-    to ensure consistency across booking nodes.
-    """
+    """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def AddShow(request,
@@ -148,6 +155,33 @@ class BookingService(object):
             '/booking.BookingService/AddShow',
             booking__pb2.AddShowRequest.SerializeToString,
             booking__pb2.AddShowResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListShows(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/booking.BookingService/ListShows',
+            booking__pb2.ListShowsRequest.SerializeToString,
+            booking__pb2.ListShowsResponse.FromString,
             options,
             channel_credentials,
             insecure,

@@ -5,12 +5,12 @@ package booking;
 option java_package = "com.example.booking";
 option go_package = "github.com/example/distributed-ticket-booking/proto/booking;booking";
 
-// Booking service used by clients to query and book seats.
-// The actual booking operation should be applied via the Raft state machine
-// to ensure consistency across booking nodes.
 service BookingService {
   // Admin RPC: Add a new show or update seat capacity/price for an existing show.
-  rpc AddShow(AddShowRequest) returns (AddShowResponse); // <--- NEW RPC
+  rpc AddShow(AddShowRequest) returns (AddShowResponse);
+  
+  // NEW: List all available shows
+  rpc ListShows(ListShowsRequest) returns (ListShowsResponse);
   
   // Book a specific seat for a user (goes through Payment -> Raft).
   rpc BookSeat(BookRequest) returns (BookResponse);
@@ -22,7 +22,24 @@ service BookingService {
   rpc ListSeats(ListSeatsRequest) returns (ListSeatsResponse);
 }
 
-// <--- NEW MESSAGES FOR ADMIN RPC
+// ===== NEW MESSAGES FOR LISTSHOWS =====
+message ListShowsRequest {
+  // No parameters needed - returns all shows
+}
+
+message ShowInfo {
+  string show_id = 1;
+  int32 total_seats = 2;
+  int64 price_cents = 3;
+  int32 available_seats = 4;
+  int32 booked_seats = 5;
+}
+
+message ListShowsResponse {
+  repeated ShowInfo shows = 1;
+}
+// ======================================
+
 message AddShowRequest {
   string user_id = 1;         // User's session token (must be Admin)
   string show_id = 2;         // The show/event ID
@@ -34,14 +51,13 @@ message AddShowResponse {
   bool success = 1;
   string message = 2;
 }
-// ---> END NEW MESSAGES
 
 message BookRequest {
-  string user_id = 1; // ID of the user making the booking (session_token in this implementation)
-  int32 seat_id = 2; // seat number / id
-  string show_id = 3; // optional show or event id
-  string correlation_id = 4; // client correlation id for tracing
-  string payment_token = 5; // Ignored: Payment is now handled server-side.
+  string user_id = 1;
+  int32 seat_id = 2;
+  string show_id = 3;
+  string correlation_id = 4;
+  string payment_token = 5;
 }
 
 message BookResponse {
