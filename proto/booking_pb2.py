@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rbooking.proto\x12\x07\x62ooking\"\\\n\x0e\x41\x64\x64ShowRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x0f\n\x07show_id\x18\x02 \x01(\t\x12\x13\n\x0btotal_seats\x18\x03 \x01(\x05\x12\x13\n\x0bprice_cents\x18\x04 \x01(\x03\"3\n\x0f\x41\x64\x64ShowResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"o\n\x0b\x42ookRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x0f\n\x07seat_id\x18\x02 \x01(\x05\x12\x0f\n\x07show_id\x18\x03 \x01(\t\x12\x16\n\x0e\x63orrelation_id\x18\x04 \x01(\t\x12\x15\n\rpayment_token\x18\x05 \x01(\t\"a\n\x0c\x42ookResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x12\n\nbooking_id\x18\x03 \x01(\t\x12\x1b\n\x04seat\x18\x04 \x01(\x0b\x32\r.booking.Seat\"0\n\x0cQueryRequest\x12\x0f\n\x07show_id\x18\x01 \x01(\t\x12\x0f\n\x07seat_id\x18\x02 \x01(\x05\"?\n\rQueryResponse\x12\x11\n\tavailable\x18\x01 \x01(\x08\x12\x1b\n\x04seat\x18\x02 \x01(\x0b\x32\r.booking.Seat\"J\n\x10ListSeatsRequest\x12\x0f\n\x07show_id\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\x05\x12\x12\n\npage_token\x18\x03 \x01(\x05\"J\n\x11ListSeatsResponse\x12\x1c\n\x05seats\x18\x01 \x03(\x0b\x32\r.booking.Seat\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\x05\"\x8d\x01\n\x04Seat\x12\x0f\n\x07seat_id\x18\x01 \x01(\x05\x12\x0f\n\x07show_id\x18\x02 \x01(\t\x12\x10\n\x08reserved\x18\x03 \x01(\x08\x12\x13\n\x0breserved_by\x18\x04 \x01(\t\x12\x13\n\x0breserved_at\x18\x05 \x01(\x03\x12\x12\n\nbooking_id\x18\x06 \x01(\t\x12\x13\n\x0bprice_cents\x18\x07 \x01(\x03\x32\x87\x02\n\x0e\x42ookingService\x12<\n\x07\x41\x64\x64Show\x12\x17.booking.AddShowRequest\x1a\x18.booking.AddShowResponse\x12\x37\n\x08\x42ookSeat\x12\x14.booking.BookRequest\x1a\x15.booking.BookResponse\x12:\n\tQuerySeat\x12\x15.booking.QueryRequest\x1a\x16.booking.QueryResponse\x12\x42\n\tListSeats\x12\x19.booking.ListSeatsRequest\x1a\x1a.booking.ListSeatsResponseBZ\n\x13\x63om.example.bookingZCgithub.com/example/distributed-ticket-booking/proto/booking;bookingb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rbooking.proto\x12\x07\x62ooking\"\x12\n\x10ListShowsRequest\"t\n\x08ShowInfo\x12\x0f\n\x07show_id\x18\x01 \x01(\t\x12\x13\n\x0btotal_seats\x18\x02 \x01(\x05\x12\x13\n\x0bprice_cents\x18\x03 \x01(\x03\x12\x17\n\x0f\x61vailable_seats\x18\x04 \x01(\x05\x12\x14\n\x0c\x62ooked_seats\x18\x05 \x01(\x05\"5\n\x11ListShowsResponse\x12 \n\x05shows\x18\x01 \x03(\x0b\x32\x11.booking.ShowInfo\"\\\n\x0e\x41\x64\x64ShowRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x0f\n\x07show_id\x18\x02 \x01(\t\x12\x13\n\x0btotal_seats\x18\x03 \x01(\x05\x12\x13\n\x0bprice_cents\x18\x04 \x01(\x03\"3\n\x0f\x41\x64\x64ShowResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"o\n\x0b\x42ookRequest\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x0f\n\x07seat_id\x18\x02 \x01(\x05\x12\x0f\n\x07show_id\x18\x03 \x01(\t\x12\x16\n\x0e\x63orrelation_id\x18\x04 \x01(\t\x12\x15\n\rpayment_token\x18\x05 \x01(\t\"a\n\x0c\x42ookResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x12\n\nbooking_id\x18\x03 \x01(\t\x12\x1b\n\x04seat\x18\x04 \x01(\x0b\x32\r.booking.Seat\"0\n\x0cQueryRequest\x12\x0f\n\x07show_id\x18\x01 \x01(\t\x12\x0f\n\x07seat_id\x18\x02 \x01(\x05\"?\n\rQueryResponse\x12\x11\n\tavailable\x18\x01 \x01(\x08\x12\x1b\n\x04seat\x18\x02 \x01(\x0b\x32\r.booking.Seat\"J\n\x10ListSeatsRequest\x12\x0f\n\x07show_id\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\x05\x12\x12\n\npage_token\x18\x03 \x01(\x05\"J\n\x11ListSeatsResponse\x12\x1c\n\x05seats\x18\x01 \x03(\x0b\x32\r.booking.Seat\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\x05\"\x8d\x01\n\x04Seat\x12\x0f\n\x07seat_id\x18\x01 \x01(\x05\x12\x0f\n\x07show_id\x18\x02 \x01(\t\x12\x10\n\x08reserved\x18\x03 \x01(\x08\x12\x13\n\x0breserved_by\x18\x04 \x01(\t\x12\x13\n\x0breserved_at\x18\x05 \x01(\x03\x12\x12\n\nbooking_id\x18\x06 \x01(\t\x12\x13\n\x0bprice_cents\x18\x07 \x01(\x03\x32\xcb\x02\n\x0e\x42ookingService\x12<\n\x07\x41\x64\x64Show\x12\x17.booking.AddShowRequest\x1a\x18.booking.AddShowResponse\x12\x42\n\tListShows\x12\x19.booking.ListShowsRequest\x1a\x1a.booking.ListShowsResponse\x12\x37\n\x08\x42ookSeat\x12\x14.booking.BookRequest\x1a\x15.booking.BookResponse\x12:\n\tQuerySeat\x12\x15.booking.QueryRequest\x1a\x16.booking.QueryResponse\x12\x42\n\tListSeats\x12\x19.booking.ListSeatsRequest\x1a\x1a.booking.ListSeatsResponseBZ\n\x13\x63om.example.bookingZCgithub.com/example/distributed-ticket-booking/proto/booking;bookingb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,24 +32,30 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'booking_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\n\023com.example.bookingZCgithub.com/example/distributed-ticket-booking/proto/booking;booking'
-  _globals['_ADDSHOWREQUEST']._serialized_start=26
-  _globals['_ADDSHOWREQUEST']._serialized_end=118
-  _globals['_ADDSHOWRESPONSE']._serialized_start=120
-  _globals['_ADDSHOWRESPONSE']._serialized_end=171
-  _globals['_BOOKREQUEST']._serialized_start=173
-  _globals['_BOOKREQUEST']._serialized_end=284
-  _globals['_BOOKRESPONSE']._serialized_start=286
-  _globals['_BOOKRESPONSE']._serialized_end=383
-  _globals['_QUERYREQUEST']._serialized_start=385
-  _globals['_QUERYREQUEST']._serialized_end=433
-  _globals['_QUERYRESPONSE']._serialized_start=435
-  _globals['_QUERYRESPONSE']._serialized_end=498
-  _globals['_LISTSEATSREQUEST']._serialized_start=500
-  _globals['_LISTSEATSREQUEST']._serialized_end=574
-  _globals['_LISTSEATSRESPONSE']._serialized_start=576
-  _globals['_LISTSEATSRESPONSE']._serialized_end=650
-  _globals['_SEAT']._serialized_start=653
-  _globals['_SEAT']._serialized_end=794
-  _globals['_BOOKINGSERVICE']._serialized_start=797
-  _globals['_BOOKINGSERVICE']._serialized_end=1060
+  _globals['_LISTSHOWSREQUEST']._serialized_start=26
+  _globals['_LISTSHOWSREQUEST']._serialized_end=44
+  _globals['_SHOWINFO']._serialized_start=46
+  _globals['_SHOWINFO']._serialized_end=162
+  _globals['_LISTSHOWSRESPONSE']._serialized_start=164
+  _globals['_LISTSHOWSRESPONSE']._serialized_end=217
+  _globals['_ADDSHOWREQUEST']._serialized_start=219
+  _globals['_ADDSHOWREQUEST']._serialized_end=311
+  _globals['_ADDSHOWRESPONSE']._serialized_start=313
+  _globals['_ADDSHOWRESPONSE']._serialized_end=364
+  _globals['_BOOKREQUEST']._serialized_start=366
+  _globals['_BOOKREQUEST']._serialized_end=477
+  _globals['_BOOKRESPONSE']._serialized_start=479
+  _globals['_BOOKRESPONSE']._serialized_end=576
+  _globals['_QUERYREQUEST']._serialized_start=578
+  _globals['_QUERYREQUEST']._serialized_end=626
+  _globals['_QUERYRESPONSE']._serialized_start=628
+  _globals['_QUERYRESPONSE']._serialized_end=691
+  _globals['_LISTSEATSREQUEST']._serialized_start=693
+  _globals['_LISTSEATSREQUEST']._serialized_end=767
+  _globals['_LISTSEATSRESPONSE']._serialized_start=769
+  _globals['_LISTSEATSRESPONSE']._serialized_end=843
+  _globals['_SEAT']._serialized_start=846
+  _globals['_SEAT']._serialized_end=987
+  _globals['_BOOKINGSERVICE']._serialized_start=990
+  _globals['_BOOKINGSERVICE']._serialized_end=1321
 # @@protoc_insertion_point(module_scope)

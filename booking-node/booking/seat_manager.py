@@ -167,3 +167,11 @@ class SeatManager:
             show_data = self.raft_node.state_machine.get_show_data(show_id)
             return show_data.get("price_cents") if show_data else None
         return None
+    
+    # Add this method to the SeatManager class in seat_manager.py
+    
+    def get_all_shows_info(self) -> Dict:
+        """Get information about all shows from the Raft State Machine."""
+        if self.raft_node:
+            return self.raft_node.state_machine.get_all_shows_seats()
+        return {}

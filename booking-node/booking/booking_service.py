@@ -90,6 +90,42 @@ class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
              logger.error("Admin show proposal failed: %s", e)
              return booking_pb2.AddShowResponse(success=False, message="Internal error during show update.")
         
+    async def ListShows(self, request, context):
+        """List all available shows with their details."""
+        try:
+            # Get all shows from the state machine
+            all_shows = self.seat_manager.get_all_shows_info()
+
+            if not all_shows:
+                return booking_pb2.ListShowsResponse(shows=[])
+        
+            show_list = []
+            for show_id, show_data in all_shows.items():
+                total_seats = show_data.get('total_seats', 0)
+                price_cents = show_data.get('price_cents', 0)
+                seats_dict = show_data.get('seats', {})
+
+                # Count booked vs available seats
+                booked_count = sum(1 for seat_data in seats_dict.values() 
+                             if seat_data.get('reserved', False))
+                available_count = total_seats - booked_count
+            
+                show_info = booking_pb2.ShowInfo(
+                    show_id=show_id,
+                    total_seats=total_seats,
+                    price_cents=price_cents,
+                    available_seats=available_count,
+                    booked_seats=booked_count
+                )
+                show_list.append(show_info)
+        
+            return booking_pb2.ListShowsResponse(shows=show_list)
+        
+        except Exception as e:
+            logger.error("Error listing shows: %s", e)
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details("Internal error while listing shows.")
+            return booking_pb2.ListShowsResponse(shows=[])
 
     # --- CORE BOOKING LOGIC ---
     async def BookSeat(self, request, context):
