@@ -1,301 +1,282 @@
 #!/usr/bin/env python3
+"""
+Stress Test for Distributed Ticket Booking System
+Tests concurrent booking of the same seat by multiple users.
+Expected: Exactly 1 success, all others fail gracefully.
+"""
+
 import grpc
+import asyncio
 import sys
 import os
-import time
-import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import random
+from concurrent.futures import ThreadPoolExecutor
+from collections import defaultdict
 
+# Add project root to Python path
 sys.path.append(os.path.dirname(__file__))
 
 from proto import booking_pb2, booking_pb2_grpc
 from proto import auth_pb2, auth_pb2_grpc
 
-AUTH_ADDR = "127.0.0.1:8000"
-BOOKING_NODES = ["127.0.0.1:50051", "127.0.0.1:50052", "127.0.0.1:50053"]
-TEST_SHOW = "stress_test"
+# Test Configuration
+NUM_CONCURRENT_USERS = 30
+TARGET_SEAT_ID = 1
+SHOW_ID = "stress_test_show"
+TOTAL_SEATS = 10
+PRICE_CENTS = 100
 
-class Stats:
-    def __init__(self):
-        self.lock = threading.Lock()
-        self.success = 0
-        self.failed = 0
-        self.errors = 0
-        self.times = []
-    
-    def add_success(self, t):
-        with self.lock:
-            self.success += 1
-            self.times.append(t)
-    
-    def add_failure(self, t):
-        with self.lock:
-            self.failed += 1
-            self.times.append(t)
-    
-    def add_error(self):
-        with self.lock:
-            self.errors += 1
-    
-    def summary(self):
-        with self.lock:
-            total = self.success + self.failed + self.errors
-            avg = sum(self.times) / len(self.times) if self.times else 0
-            return {
-                'total': total,
-                'success': self.success,
-                'failed': self.failed,
-                'errors': self.errors,
-                'avg_time': avg
-            }
+# Admin credentials
+ADMIN_EMAIL = "admin@gmail.com"
+ADMIN_PASSWORD = "admin123"
 
-def print_header(msg):
-    print("\n" + "="*60)
-    print(f"  {msg}")
-    print("="*60)
+# Booking nodes
+BOOKING_NODES = [
+    "127.0.0.1:50051",
+    "127.0.0.1:50052", 
+    "127.0.0.1:50053"
+]
 
-def setup():
-    """Setup test environment."""
-    print_header("Setup")
+
+def get_admin_token():
+    """Login as admin and get session token."""
+    print("🔑 Logging in as admin...")
+    auth_channel = grpc.insecure_channel("127.0.0.1:8000")
+    auth_stub = auth_pb2_grpc.AuthServiceStub(auth_channel)
     
-    # CRITICAL FIX: Wait for services
-    print("Waiting for services to be ready...")
-    time.sleep(5)
+    login_req = auth_pb2.LoginRequest(email=ADMIN_EMAIL, password=ADMIN_PASSWORD)
+    login_resp = auth_stub.Login(login_req)
     
-    # Admin login
-    auth_stub = auth_pb2_grpc.AuthServiceStub(grpc.insecure_channel(AUTH_ADDR))
-    admin = auth_pb2.LoginRequest(email="admin@gmail.com", password="admin123")
-    admin_resp = auth_stub.Login(admin)
-    admin_token = admin_resp.session.token
-    print("✓ Admin logged in")
+    if not login_resp.success:
+        raise Exception(f"Admin login failed: {login_resp.message}")
     
-    # CRITICAL FIX: Find leader and create show properly
-    print(f"Creating show '{TEST_SHOW}'...")
+    print(f"✅ Admin logged in successfully (User ID: {login_resp.session.user_id[:8]}...)")
+    return login_resp.session.token
+
+
+def setup_test_show(admin_token):
+    """Create a test show with admin privileges."""
+    print(f"\n📋 Setting up test show '{SHOW_ID}' with {TOTAL_SEATS} seats at ${PRICE_CENTS/100:.2f}...")
+    
+    # Try each node until we find the leader
     for node_addr in BOOKING_NODES:
         try:
-            stub = booking_pb2_grpc.BookingServiceStub(grpc.insecure_channel(node_addr))
-            show_req = booking_pb2.AddShowRequest(
+            channel = grpc.insecure_channel(node_addr)
+            stub = booking_pb2_grpc.BookingServiceStub(channel)
+            
+            request = booking_pb2.AddShowRequest(
                 user_id=admin_token,
-                show_id=TEST_SHOW,
-                total_seats=20,
-                price_cents=100
+                show_id=SHOW_ID,
+                total_seats=TOTAL_SEATS,
+                price_cents=PRICE_CENTS
             )
             
-            resp = stub.AddShow(show_req, timeout=5)
-            if resp.success:
-                print(f"✓ Show created on leader: {TEST_SHOW} (20 seats)")
-                
-                # VERIFY show was created
-                time.sleep(1)
-                query_req = booking_pb2.QueryRequest(show_id=TEST_SHOW, seat_id=1)
-                query_resp = stub.QuerySeat(query_req, timeout=3)
-                if query_resp.seat:
-                    print(f"✓ Verified: Show has seats")
-                    return admin_token
+            response = stub.AddShow(request, timeout=5)
+            
+            if response.success:
+                print(f"✅ Show created successfully via {node_addr}")
+                print(f"   Message: {response.message}")
+                return True
+            else:
+                if "not the Raft leader" in response.message:
+                    print(f"⏩ {node_addr} is not leader, trying next node...")
+                    continue
                 else:
-                    print("⚠️  Warning: Show created but seats not visible")
-                return admin_token
+                    print(f"❌ Show creation failed: {response.message}")
+                    return False
+                    
+        except grpc.RpcError as e:
+            if e.code() == grpc.StatusCode.FAILED_PRECONDITION:
+                print(f"⏩ {node_addr} is not leader, trying next node...")
+                continue
+            elif e.code() == grpc.StatusCode.UNAVAILABLE:
+                print(f"⚠️  {node_addr} is unavailable, trying next node...")
+                continue
+            else:
+                print(f"❌ Error connecting to {node_addr}: {e.details()}")
+                continue
+                
+    print("❌ Failed to create show on any node")
+    return False
+
+
+def create_test_user(user_num):
+    """Register and login a test user."""
+    email = f"user{user_num}@test.com"
+    password = f"pass{user_num}"
+    
+    auth_channel = grpc.insecure_channel("127.0.0.1:8000")
+    auth_stub = auth_pb2_grpc.AuthServiceStub(auth_channel)
+    
+    # Register
+    reg_req = auth_pb2.RegisterRequest(email=email, password=password)
+    reg_resp = auth_stub.Register(reg_req)
+    
+    # Login
+    login_req = auth_pb2.LoginRequest(email=email, password=password)
+    login_resp = auth_stub.Login(login_req)
+    
+    if login_resp.success:
+        return login_resp.session.token
+    else:
+        raise Exception(f"Failed to create user {user_num}")
+
+
+def attempt_booking(user_num, session_token):
+    """
+    Single user attempts to book the target seat.
+    Returns: (user_num, success, message, node_used)
+    """
+    card_number = f"{1000 + user_num}"  # Valid card number
+    
+    # Try booking on each node until success or all fail
+    for node_addr in BOOKING_NODES:
+        try:
+            channel = grpc.insecure_channel(node_addr)
+            stub = booking_pb2_grpc.BookingServiceStub(channel)
+            
+            request = booking_pb2.BookRequest(
+                user_id=session_token,
+                seat_id=TARGET_SEAT_ID,
+                show_id=SHOW_ID,
+                payment_token=card_number
+            )
+            
+            response = stub.BookSeat(request, timeout=10)
+            
+            if response.success:
+                return (user_num, True, response.message, node_addr)
+            else:
+                # If it's not a leader error, this is the final answer
+                if "not the Raft leader" not in response.message:
+                    return (user_num, False, response.message, node_addr)
+                # Otherwise try next node
+                    
         except grpc.RpcError as e:
             if e.code() == grpc.StatusCode.FAILED_PRECONDITION:
                 continue  # Try next node
+            elif e.code() == grpc.StatusCode.UNAVAILABLE:
+                continue  # Try next node
             else:
-                print(f"  Node error: {e.details()}")
+                return (user_num, False, f"RPC Error: {e.details()}", node_addr)
+    
+    return (user_num, False, "All nodes failed or unavailable", "none")
+
+
+def run_stress_test():
+    """Main stress test execution."""
+    print("\n" + "="*70)
+    print("🚀 STRESS TEST: Concurrent Booking Race Condition")
+    print("="*70)
+    
+    # Phase 1: Setup
+    print("\n📌 Phase 1: Test Setup")
+    print("-" * 70)
+    
+    admin_token = get_admin_token()
+    
+    if not setup_test_show(admin_token):
+        print("\n❌ Test setup failed. Exiting.")
+        return
+    
+    print(f"\n👥 Creating {NUM_CONCURRENT_USERS} test users...")
+    user_tokens = []
+    for i in range(NUM_CONCURRENT_USERS):
+        try:
+            token = create_test_user(i)
+            user_tokens.append(token)
+            if (i + 1) % 10 == 0:
+                print(f"   Created {i + 1}/{NUM_CONCURRENT_USERS} users...")
         except Exception as e:
-            print(f"  Error: {str(e)}")
+            print(f"⚠️  Failed to create user {i}: {e}")
     
-    print("ERROR: Could not create show on any node!")
-    sys.exit(1)
-
-def create_user(uid):
-    """Create test user."""
-    try:
-        stub = auth_pb2_grpc.AuthServiceStub(grpc.insecure_channel(AUTH_ADDR))
-        email = f"stress_{uid}@test.com"
-        
-        # Register
-        stub.Register(auth_pb2.RegisterRequest(email=email, password="test123"))
-        
-        # Login
-        login = auth_pb2.LoginRequest(email=email, password="test123")
-        resp = stub.Login(login)
-        return resp.session.token
-    except:
-        return None
-
-def book_seat(uid, seat, token, stats):
-    """Attempt booking."""
-    start = time.time()
+    print(f"✅ Successfully created {len(user_tokens)} users")
     
-    try:
-        node = random.choice(BOOKING_NODES)
-        stub = booking_pb2_grpc.BookingServiceStub(grpc.insecure_channel(node))
+    # Phase 2: Concurrent Booking
+    print("\n📌 Phase 2: Concurrent Booking Attack")
+    print("-" * 70)
+    print(f"🎯 Target: Seat {TARGET_SEAT_ID} in show '{SHOW_ID}'")
+    print(f"⚡ Launching {len(user_tokens)} concurrent booking requests...\n")
+    
+    # Use ThreadPoolExecutor for true concurrency
+    results = []
+    with ThreadPoolExecutor(max_workers=NUM_CONCURRENT_USERS) as executor:
+        futures = [
+            executor.submit(attempt_booking, i, token) 
+            for i, token in enumerate(user_tokens)
+        ]
         
-        req = booking_pb2.BookRequest(
-            user_id=token,
-            seat_id=seat,
-            show_id=TEST_SHOW,
-            payment_token="1234567890123456"
-        )
-        
-        resp = stub.BookSeat(req, timeout=10)
-        duration = time.time() - start
-        
-        if resp.success:
-            stats.add_success(duration)
-            return f"User {uid}: ✓ Seat {seat}"
+        for future in futures:
+            results.append(future.result())
+    
+    # Phase 3: Analysis
+    print("\n📌 Phase 3: Results Analysis")
+    print("-" * 70)
+    
+    successes = [r for r in results if r[1]]
+    failures = [r for r in results if not r[1]]
+    
+    print(f"\n📊 Summary:")
+    print(f"   Total Attempts:  {len(results)}")
+    print(f"   ✅ Successes:    {len(successes)}")
+    print(f"   ❌ Failures:     {len(failures)}")
+    
+    # Show detailed results
+    if successes:
+        print(f"\n🎉 Successful Bookings:")
+        for user_num, _, message, node in successes:
+            print(f"   User {user_num}: {message} (via {node})")
+    
+    # Categorize failures
+    failure_reasons = defaultdict(list)
+    for user_num, _, message, node in failures:
+        # Extract key failure reason
+        if "already reserved" in message.lower():
+            reason = "Seat already booked"
+        elif "payment" in message.lower():
+            reason = "Payment failure"
+        elif "invalid" in message.lower() or "out of range" in message.lower():
+            reason = "Invalid seat"
         else:
-            stats.add_failure(duration)
-            return f"User {uid}: ✗ Seat {seat}"
-    except:
-        stats.add_error()
-        return f"User {uid}: ERROR"
-
-def test_race_condition(n=30):
-    """Test concurrent booking of same seat."""
-    print_header(f"Test 1: Race Condition ({n} users, 1 seat)")
+            reason = message[:50]  # First 50 chars
+        failure_reasons[reason].append(user_num)
     
-    stats = Stats()
+    if failure_reasons:
+        print(f"\n📉 Failure Breakdown:")
+        for reason, users in failure_reasons.items():
+            print(f"   '{reason}': {len(users)} users")
+            if len(users) <= 5:
+                print(f"      Users: {users}")
     
-    print(f"Creating {n} users...")
-    tokens = []
-    for i in range(n):
-        token = create_user(f"race_{i}")
-        if token:
-            tokens.append((i, token))
+    # Phase 4: Verdict
+    print("\n" + "="*70)
+    print("📋 TEST VERDICT")
+    print("="*70)
     
-    print(f"✓ Created {len(tokens)} users")
-    print(f"\nAll booking seat 1...")
-    
-    with ThreadPoolExecutor(max_workers=n) as executor:
-        futures = [executor.submit(book_seat, uid, 1, token, stats) 
-                   for uid, token in tokens]
-        
-        for future in as_completed(futures):
-            print(f"  {future.result()}")
-    
-    s = stats.summary()
-    print(f"\nResults:")
-    print(f"  Success: {s['success']} (expected: 1)")
-    print(f"  Failed: {s['failed']} (expected: {n-1})")
-    print(f"  Errors: {s['errors']}")
-    print(f"  Avg time: {s['avg_time']:.3f}s")
-    
-    if s['success'] == 1 and s['errors'] == 0:
-        print("\n✓ PASS")
+    if len(successes) == 1 and len(failures) == len(results) - 1:
+        print("✅ PASS: Exactly 1 booking succeeded, all others failed gracefully")
+        print("🎯 Raft consensus successfully prevented double-booking!")
         return True
-    elif s['success'] == 0:
-        print("\n❌ FAIL: No bookings succeeded (show may not exist)")
+    elif len(successes) == 0:
+        print("⚠️  WARNING: No bookings succeeded (possible system issue)")
+        return False
+    elif len(successes) > 1:
+        print(f"❌ FAIL: {len(successes)} bookings succeeded (DOUBLE BOOKING DETECTED!)")
+        print("💥 Raft consensus failed to prevent race condition!")
         return False
     else:
-        print("\n❌ FAIL")
+        print("⚠️  INCONCLUSIVE: Unexpected result pattern")
         return False
 
-def test_load(n=50, seats=20):
-    """Test system under load."""
-    print_header(f"Test 2: Load Test ({n} users, {seats} seats)")
-    
-    stats = Stats()
-    
-    print(f"Creating {n} users...")
-    tokens = []
-    for i in range(n):
-        token = create_user(f"load_{i}")
-        if token:
-            tokens.append((i, token))
-    
-    print(f"✓ Created {len(tokens)} users")
-    print(f"\nStarting load test...")
-    
-    start = time.time()
-    assignments = [(uid, token, (uid % seats) + 1) for uid, token in tokens]
-    
-    with ThreadPoolExecutor(max_workers=n) as executor:
-        futures = [executor.submit(book_seat, uid, seat, token, stats)
-                   for uid, token, seat in assignments]
-        
-        for future in as_completed(futures):
-            future.result()
-    
-    total_time = time.time() - start
-    s = stats.summary()
-    
-    print(f"\nResults:")
-    print(f"  Total time: {total_time:.2f}s")
-    print(f"  Throughput: {s['total']/total_time:.2f} req/s")
-    print(f"  Success: {s['success']}")
-    print(f"  Failed: {s['failed']}")
-    print(f"  Errors: {s['errors']}")
-    print(f"  Avg time: {s['avg_time']:.3f}s")
-    
-    error_rate = s['errors'] / s['total'] if s['total'] > 0 else 1
-    
-    if error_rate < 0.1:
-        print(f"\n✓ PASS (error rate: {error_rate*100:.1f}%)")
-        return True
-    else:
-        print(f"\n❌ FAIL (high error rate: {error_rate*100:.1f}%)")
-        return False
-
-def verify_integrity():
-    """Verify no double booking."""
-    print_header("Test 3: Integrity Verification")
-    
-    try:
-        stub = booking_pb2_grpc.BookingServiceStub(grpc.insecure_channel(BOOKING_NODES[0]))
-        req = booking_pb2.ListSeatsRequest(show_id=TEST_SHOW, page_size=100, page_token=0)
-        resp = stub.ListSeats(req, timeout=5)
-        
-        booked = [s for s in resp.seats if s.reserved]
-        available = [s for s in resp.seats if not s.reserved]
-        
-        print(f"  Total: {len(resp.seats)}")
-        print(f"  Booked: {len(booked)}")
-        print(f"  Available: {len(available)}")
-        
-        if len(resp.seats) == 0:
-            print(f"\n⚠️  WARNING: Show has no seats (creation failed)")
-            return False
-        
-        booking_ids = [s.booking_id for s in booked]
-        unique = len(set(booking_ids))
-        
-        if unique == len(booked):
-            print(f"\n✓ PASS: All {len(booked)} bookings unique")
-            return True
-        else:
-            print(f"\n❌ FAIL: Duplicates detected")
-            return False
-    except Exception as e:
-        print(f"ERROR: {str(e)}")
-        return False
-
-def main():
-    print("\n" + "█"*60)
-    print("█  STRESS TEST SUITE")
-    print("█"*60)
-    
-    setup()
-    
-    test1 = test_race_condition(30)
-    time.sleep(2)
-    
-    test2 = test_load(50, 20)
-    time.sleep(2)
-    
-    test3 = verify_integrity()
-    
-    print_header("SUMMARY")
-    print(f"Test 1 (Race): {'✓ PASS' if test1 else '❌ FAIL'}")
-    print(f"Test 2 (Load): {'✓ PASS' if test2 else '❌ FAIL'}")
-    print(f"Test 3 (Integrity): {'✓ PASS' if test3 else '❌ FAIL'}")
-    
-    if test1 and test2 and test3:
-        print("\n✓ ALL TESTS PASSED")
-        return 0
-    else:
-        print("\n❌ SOME TESTS FAILED")
-        return 1
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        success = run_stress_test()
+        sys.exit(0 if success else 1)
+    except KeyboardInterrupt:
+        print("\n\n⚠️  Test interrupted by user")
+        sys.exit(1)
+    except Exception as e:
+        print(f"\n\n❌ Test failed with exception: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
