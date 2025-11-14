@@ -22,5 +22,118 @@
         "reserved_at": 1762936971611
       }
     }
+  },
+  "election_test": {
+    "total_seats": 5,
+    "price_cents": 50,
+    "seats": {}
+  },
+  "stress_test": {
+    "total_seats": 20,
+    "price_cents": 100,
+    "seats": {
+      "1": {
+        "reserved": true,
+        "user_id": "37729804-5a92-4adb-8352-107d7e95341a",
+        "booking_id": "68ea3962-8f60-47dc-9b8e-115efa2ddf5b",
+        "reserved_at": 1763104830539
+      },
+      "4": {
+        "reserved": true,
+        "user_id": "0bd1a2bb-8e74-4af6-b7db-491d06a87b1a",
+        "booking_id": "59e65e34-e737-48af-ad97-d79e78508d2d",
+        "reserved_at": 1763104832732
+      },
+      "7": {
+        "reserved": true,
+        "user_id": "80febdb0-efae-4e66-b07f-153bddf37625",
+        "booking_id": "f9b8a566-df42-49d4-a6cb-5ff209165aba",
+        "reserved_at": 1763104832743
+      },
+      "12": {
+        "reserved": true,
+        "user_id": "912ea690-9a4b-457b-ba03-476ec25ede74",
+        "booking_id": "fd10b30a-b87b-4c65-9427-5fa3357cbdd1",
+        "reserved_at": 1763104832743
+      },
+      "15": {
+        "reserved": true,
+        "user_id": "55303bac-20d9-4e68-88b1-29bfbddbc50b",
+        "booking_id": "7e4f48ce-8f17-4042-80e1-b3c6fb2996e7",
+        "reserved_at": 1763104832754
+      },
+      "16": {
+        "reserved": true,
+        "user_id": "38c29134-ab30-45b6-b682-dfd9dac6a60e",
+        "booking_id": "c28a3861-e326-492e-be22-57f488220c79",
+        "reserved_at": 1763104832755
+      },
+      "17": {
+        "reserved": true,
+        "user_id": "87b27234-75ff-4c39-bd24-21591afa4600",
+        "booking_id": "344f05e2-453a-4970-a60a-4cc37ca8f746",
+        "reserved_at": 1763104832755
+      },
+      "5": {
+        "reserved": true,
+        "user_id": "57d23d54-96e7-4004-811c-6229e1c4084f",
+        "booking_id": "c2bef0dc-e0e0-4d90-990e-41f955a0179a",
+        "reserved_at": 1763104832755
+      },
+      "6": {
+        "reserved": true,
+        "user_id": "10d3f2d0-2d97-4018-bebc-fa8c972ef113",
+        "booking_id": "a4821345-1da6-4146-a4e6-80ad743bf89e",
+        "reserved_at": 1763104832755
+      },
+      "11": {
+        "reserved": true,
+        "user_id": "0d24c8b5-d9c7-4447-bda6-bd6ec7e6dbf7",
+        "booking_id": "82cb6771-e78c-4aab-930c-9a5f09fdcd21",
+        "reserved_at": 1763104832756
+      },
+      "20": {
+        "reserved": true,
+        "user_id": "5890eb2f-25fd-4513-bfd6-d3d1820ea072",
+        "booking_id": "36f131e1-c105-4264-be23-8a3bed97bc4d",
+        "reserved_at": 1763104832756
+      },
+      "3": {
+        "reserved": true,
+        "user_id": "10756c5c-84c7-469a-91f8-c54adb43fcc5",
+        "booking_id": "1ea49b3e-a35c-44dd-b594-a6175bfa3643",
+        "reserved_at": 1763104832756
+      },
+      "8": {
+        "reserved": true,
+        "user_id": "93352654-9dd7-4bf7-977b-20c3815a08a1",
+        "booking_id": "620e3c8a-6ce1-4588-829d-421da4ede7c1",
+        "reserved_at": 1763104832757
+      },
+      "9": {
+        "reserved": true,
+        "user_id": "0621f1cb-e80a-4954-8255-07376868329f",
+        "booking_id": "a85a7cef-5d12-4012-ab64-0029695ec870",
+        "reserved_at": 1763104832757
+      }
+    }
+  },
+  "failover_test": {
+    "total_seats": 10,
+    "price_cents": 100,
+    "seats": {
+      "1": {
+        "reserved": true,
+        "user_id": "71b6456c-99dd-4b5a-bc70-4b212e683a1a",
+        "booking_id": "e83943d4-687f-4dfe-8799-9b0163fae3d4",
+        "reserved_at": 1763105197821
+      },
+      "2": {
+        "reserved": true,
+        "user_id": "71b6456c-99dd-4b5a-bc70-4b212e683a1a",
+        "booking_id": "ad166a2c-98b1-4f19-9caa-be5b65952730",
+        "reserved_at": 1763105204895
+      }
+    }
   }
 }
