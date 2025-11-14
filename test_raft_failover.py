@@ -52,7 +52,7 @@ def register_and_login():
         print(f"ERROR: Login failed")
         sys.exit(1)
     
-    print(f"✓ Test user logged in: {login_resp.session.user_id[:8]}...")
+    print(f" Test user logged in: {login_resp.session.user_id[:8]}...")
     return login_resp.session.token
 
 def find_leader(admin_token, max_retries=5):
@@ -65,7 +65,7 @@ def find_leader(admin_token, max_retries=5):
                 stub = booking_pb2_grpc.BookingServiceStub(grpc.insecure_channel(addr))
                 
                 req = booking_pb2.AddShowRequest(
-                    user_id=admin_token,  # Use admin token!
+                    user_id=admin_token,  
                     show_id=TEST_SHOW,
                     total_seats=10,
                     price_cents=100
@@ -74,7 +74,7 @@ def find_leader(admin_token, max_retries=5):
                 resp = stub.AddShow(req, timeout=5)
                 
                 if resp.success:
-                    print(f"✓ Leader: {node_id} ({addr})")
+                    print(f" Leader: {node_id} ({addr})")
                     return addr, node_id
                     
             except grpc.RpcError as e:
@@ -128,30 +128,30 @@ def verify_consistency(seat_id):
             print(f"  {node_id}: UNAVAILABLE")
     
     if len(states) > 0 and len(set(s[1] for s in states)) == 1:
-        print(f"\n✓ Consistent across {len(states)} nodes!")
+        print(f"\n Consistent across {len(states)} nodes!")
         return True
     else:
-        print(f"\n❌ Inconsistent!")
+        print(f"\n Inconsistent!")
         return False
 
 def kill_node(node_id):
     """Kill a node."""
-    print(f"\n💀 Killing {node_id}...")
+    print(f"\n Killing {node_id}...")
     subprocess.run(["pkill", "-f", f"config-{node_id}.json"], check=False)
     time.sleep(1)
 
 def main():
-    print("\n" + "█"*60)
-    print("█  RAFT LEADER FAILOVER TEST")
-    print("█"*60)
+    print("\n" + ""*60)
+    print("  RAFT LEADER FAILOVER TEST")
+    print(""*60)
     
     # Wait for cluster
-    print("\n⏳ Waiting for cluster to stabilize (5 seconds)...")
+    print("\n Waiting for cluster to stabilize (5 seconds)...")
     time.sleep(5)
     
     # Get admin token for leader detection
     admin_token = get_admin_token()
-    print("✓ Admin token obtained")
+    print(" Admin token obtained")
     
     # Login test user for bookings
     user_token = register_and_login()
@@ -163,10 +163,10 @@ def main():
     print_header("Booking Seat 1 on Leader")
     resp = book_seat(leader_addr, 1, user_token)
     if resp and resp.success:
-        print(f"✓ Seat 1 booked!")
+        print(f" Seat 1 booked!")
     else:
         msg = resp.message if resp else "No response"
-        print(f"❌ Booking failed: {msg}")
+        print(f" Booking failed: {msg}")
         sys.exit(1)
     
     # Verify
@@ -187,16 +187,16 @@ def main():
         print("ERROR: Same leader!")
         sys.exit(1)
     
-    print(f"\n✓ New leader: {new_id}")
+    print(f"\n New leader: {new_id}")
     
     # Book seat 2 (using user token)
     print_header("Booking Seat 2 on New Leader")
     resp = book_seat(new_addr, 2, user_token)
     if resp and resp.success:
-        print(f"✓ Seat 2 booked!")
+        print(f" Seat 2 booked!")
     else:
         msg = resp.message if resp else "No response"
-        print(f"❌ Booking failed: {msg}")
+        print(f" Booking failed: {msg}")
         sys.exit(1)
     
     # Final verification
@@ -206,10 +206,10 @@ def main():
     c2 = verify_consistency(2)
     
     if c1 and c2:
-        print("\n✓ SUCCESS: Failover worked!")
+        print("\n SUCCESS: Failover worked!")
         return 0
     else:
-        print("\n❌ FAILURE")
+        print("\n FAILURE")
         return 1
 
 if __name__ == "__main__":

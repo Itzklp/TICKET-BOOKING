@@ -69,7 +69,7 @@ class SeatManager:
     async def book_seat(self, show_id: str, seat_id: int, user_id: str, transaction_id: str) -> Optional[Seat]:
         
         if self.raft_node and self.raft_node.is_leader():
-            # Check current state from the Raft State Machine
+
             seat_record = self.raft_node.get_seat_state(show_id, seat_id)
             
             if not seat_record.get("exists"):
@@ -79,7 +79,7 @@ class SeatManager:
             if seat_record.get("reserved"):
                 return None 
 
-            #  Create command 
+
             command = json.dumps({
                 "type": "reserve",
                 "show_id": show_id, 
@@ -89,10 +89,10 @@ class SeatManager:
             }).encode()
             
             try:
-                #  Propose through Raft and wait for commit
+
                 await self.raft_node.propose(command)
                 
-                #  Check if reservation succeeded in the state machine
+
                 final_state = self.raft_node.get_seat_state(show_id, seat_id)
                 
                 if final_state.get("reserved") and final_state.get("user_id") == user_id:
@@ -164,8 +164,6 @@ class SeatManager:
             show_data = self.raft_node.state_machine.get_show_data(show_id)
             return show_data.get("price_cents") if show_data else None
         return None
-    
-
     
     def get_all_shows_info(self) -> Dict:
         """Get information about all shows from the Raft State Machine."""

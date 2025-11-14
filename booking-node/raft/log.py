@@ -1,8 +1,3 @@
-"""Simple in-memory Raft log.
-
-In production systems, this should be replaced with a persistent
-Write-Ahead Log (WAL) or durable storage mechanism.
-"""
 
 from dataclasses import dataclass
 from typing import Dict, Optional, Generator
@@ -20,13 +15,13 @@ class Log:
     """In-memory log storage for Raft nodes."""
 
     def __init__(self):
-        # Dictionary mapping log index → LogEntry
+
         self._entries: Dict[int, LogEntry] = {}
         self.last_index: int = 0
 
-    # ------------------------------------------------------------------
+
     # Log Operations
-    # ------------------------------------------------------------------
+
     def append(self, entry: LogEntry) -> None:
         """Append a new log entry."""
         self._entries[entry.index] = entry
