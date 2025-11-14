@@ -1,7 +1,3 @@
-"""
-gRPC Booking service implementation that wires SeatManager to RPC calls.
-This file assumes you have generated gRPC protobuf code as booking_pb2
-"""
 
 import logging
 import sys
@@ -16,33 +12,33 @@ from booking.seat_manager import SeatManager
 
 from proto import booking_pb2, booking_pb2_grpc
 from proto import auth_pb2, auth_pb2_grpc
-from proto import payment_pb2, payment_pb2_grpc # <-- Import Payment protos/stubs
+from proto import payment_pb2, payment_pb2_grpc 
 
 logger = logging.getLogger("booking_service")
 
-# Define the admin user ID constant, matching the auth-server change
+
 ADMIN_ID = "00000000-0000-0000-0000-000000000000" 
 
 class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
     def __init__(self, raft_node=None):
-        # 1. Initialize Seat Manager
+        # Initialize Seat Manager
         self.seat_manager = SeatManager(raft_node)
         
-        # 2. Load config to get Auth/Payment Service addresses
+        # Load config to get Auth/Payment Service addresses
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         config_path = os.path.join(project_root, "booking-node", "config.json")
         
         with open(config_path, "r") as f:
             cfg = json.load(f)
 
-        # 3. Initialize Auth Stub
+        # Initialize Auth Stub
         auth_cfg = cfg["services"]["auth_service"]
         auth_addr = f'{auth_cfg["host"]}:{auth_cfg["port"]}'
         self.auth_channel = grpc.insecure_channel(auth_addr)
         self.auth_stub = auth_pb2_grpc.AuthServiceStub(self.auth_channel)
         logger.info("Connected Auth Service stub for validation at %s", auth_addr)
         
-        # 4. Initialize Payment Stub 
+        # Initialize Payment Stub 
         payment_cfg = cfg["services"]["payment_service"]
         payment_addr = f'{payment_cfg["host"]}:{payment_cfg["port"]}'
         self.payment_channel = grpc.insecure_channel(payment_addr)
@@ -56,7 +52,7 @@ class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
         
         session_token = request.user_id 
         
-        # 1. Validate Session Token and check for Admin user
+        #  Validate Session Token and check for Admin user
         try:
             validation_req = auth_pb2.ValidateSessionRequest(token=session_token)
             validation_resp = self.auth_stub.ValidateSession(validation_req) 
@@ -70,7 +66,7 @@ class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
             context.set_details("Only the admin user can perform this operation.")
             return booking_pb2.AddShowResponse(success=False, message="Permission denied. Admin access required.")
         
-        # 2. Proceed with add_show
+        #  Proceed with add_show
         try:
             success = await self.seat_manager.add_show(
                 request.show_id, request.total_seats, request.price_cents
@@ -93,7 +89,7 @@ class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
     async def ListShows(self, request, context):
         """List all available shows with their details."""
         try:
-            # Get all shows from the state machine
+
             all_shows = self.seat_manager.get_all_shows_info()
 
             if not all_shows:
@@ -105,7 +101,7 @@ class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
                 price_cents = show_data.get('price_cents', 0)
                 seats_dict = show_data.get('seats', {})
 
-                # Count booked vs available seats
+
                 booked_count = sum(1 for seat_data in seats_dict.values() 
                              if seat_data.get('reserved', False))
                 available_count = total_seats - booked_count
@@ -127,13 +123,13 @@ class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
             context.set_details("Internal error while listing shows.")
             return booking_pb2.ListShowsResponse(shows=[])
 
-    # --- CORE BOOKING LOGIC ---
+    # --- BOOKING LOGIC ---
     async def BookSeat(self, request, context):
-        # 1. Auth Validation 
+        #  Auth Validation 
         session_token = request.user_id 
         seat_id = request.seat_id
         show_id = request.show_id
-        card_number = request.payment_token # Retrieve card number from payment_token field
+        card_number = request.payment_token 
 
         try:
             validation_req = auth_pb2.ValidateSessionRequest(token=session_token)
@@ -151,7 +147,7 @@ class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
 
         authenticated_user_id = validation_resp.user_id
         
-        # 2. Price Lookup
+        #  Price Lookup
         price_cents = self.seat_manager.get_show_price(show_id)
         if price_cents is None:
              return booking_pb2.BookResponse(
@@ -161,14 +157,14 @@ class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
                 seat=None
             )
 
-        # 3. Call Payment Service
+        #  Call Payment Service
         try:
             payment_req = payment_pb2.PaymentRequest(
                 user_id=authenticated_user_id,
                 payment_method_id="demo-card", 
                 currency="USD", 
                 amount_cents=price_cents,
-                card_number=card_number # Pass card number
+                card_number=card_number 
             )
             payment_resp = self.payment_stub.ProcessPayment(payment_req)
         except Exception as e:
@@ -194,7 +190,7 @@ class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
             
         transaction_id = payment_resp.transaction_id
         
-        # 4. Proceed with booking (only if payment succeeded)
+        #  Proceed with booking (only if payment succeeded)
         try:
             seat = await self.seat_manager.book_seat(show_id, seat_id, authenticated_user_id, transaction_id) 
         except PermissionError:
@@ -233,7 +229,7 @@ class BookingServiceServicer(booking_pb2_grpc.BookingServiceServicer):
                 )
             )
         else:
-            # FIX: Clearer message when seat is unavailable (already booked or invalid/out of range)
+
             return booking_pb2.BookResponse(
                 success=False,
                 message="Booking failed: Seat is already reserved or seat ID is invalid/out of range.",

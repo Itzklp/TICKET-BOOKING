@@ -5,9 +5,9 @@ import uuid
 import os
 import sys
 import re 
-import json # <-- ADDED
+import json
 
-# Add project root to Python path
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from proto import auth_pb2, auth_pb2_grpc
@@ -22,16 +22,16 @@ EMAIL_REGEX = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 # Data will be saved in auth-service/auth_data.json
 PERSISTENCE_FILE = os.path.join(os.path.dirname(__file__), "auth_data.json")
 
-# --- DEFAULT ADMIN CONFIG ---
+# --- ADMIN CONFIG ---
 ADMIN_EMAIL = "admin@gmail.com"
 ADMIN_PASSWORD = "admin123"
-# A deterministic UUID for the admin for multi-service consistency
-ADMIN_UUID_SEED = "00000000-0000-0000-0000-000000000000" 
-ADMIN_ID = str(uuid.UUID(ADMIN_UUID_SEED)) # Persistent UUID for admin
 
-# In-memory store: email -> {password, user_id}
+ADMIN_UUID_SEED = "00000000-0000-0000-0000-000000000000" 
+ADMIN_ID = str(uuid.UUID(ADMIN_UUID_SEED)) 
+
+
 USERS = {} 
-# In-memory store: token -> user_id
+
 SESSIONS = {} 
 
 def _load_data():
@@ -61,9 +61,9 @@ def _ensure_admin_user():
     if ADMIN_EMAIL not in USERS:
         USERS[ADMIN_EMAIL] = {"password": ADMIN_PASSWORD, "user_id": ADMIN_ID}
         logger.warning("Default admin user created: %s (ID: %s)", ADMIN_EMAIL, ADMIN_ID)
-        _save_data() # Save immediately after creating admin
+        _save_data() 
     elif USERS[ADMIN_EMAIL].get("user_id") != ADMIN_ID:
-        # Correct admin ID if it was generated randomly before
+
         USERS[ADMIN_EMAIL]["user_id"] = ADMIN_ID
         _save_data()
         logger.info("Admin user ID ensured to be correct: %s", ADMIN_ID)
@@ -77,15 +77,15 @@ _ensure_admin_user()
 class AuthService(auth_pb2_grpc.AuthServiceServicer):
     def Register(self, request, context):
         
-        # 1. Basic validation
+        #  Basic validation
         if not request.email or not request.password:
             return auth_pb2.RegisterResponse(success=False, message="Email and password are required.")
 
-        # 2. Prevent overwriting admin
+        #  Prevent overwriting admin
         if request.email == ADMIN_EMAIL:
              return auth_pb2.RegisterResponse(success=False, message="Cannot register admin email.")
 
-        # 3. Regex Email Validation 
+        #  Regex Email Validation 
         if not re.fullmatch(EMAIL_REGEX, request.email):
             logger.warning("Registration failed due to invalid email format: %s", request.email)
             return auth_pb2.RegisterResponse(
@@ -93,15 +93,15 @@ class AuthService(auth_pb2_grpc.AuthServiceServicer):
                 message="Invalid email format. Please use a standard email address (e.g., user@example.com)."
             )
 
-        # 4. Check for existing user
+        #  Check for existing user
         if request.email in USERS:
             return auth_pb2.RegisterResponse(success=False, message="User already exists.")
         
-        # 5. Successful registration (mock)
+        #  Successful registration
         user_id = str(uuid.uuid4())
         USERS[request.email] = {"password": request.password, "user_id": user_id}
         logger.info("New user registered: %s", request.email)
-        _save_data() # <-- ADDED: Save data
+        _save_data() 
         return auth_pb2.RegisterResponse(success=True, message="Registration successful. Please log in.")
 
     def Login(self, request, context):
@@ -114,7 +114,7 @@ class AuthService(auth_pb2_grpc.AuthServiceServicer):
         SESSIONS[token] = user_id
         
         logger.info("User logged in: %s (Token: %s)", user_id, token)
-        _save_data() # <-- ADDED: Save data
+        _save_data() 
         return auth_pb2.LoginResponse(
             success=True, 
             message="Login successful.",
