@@ -4,16 +4,16 @@ import asyncio
 import logging
 from typing import Dict, Optional, List, Tuple
 
-# from proto import raft_pb2, payment_pb2 # <-- Not directly needed here, managed in booking_service
+
 from raft.raft import RaftNode 
 
 logger = logging.getLogger("seat_manager") 
 
-# Define the admin user ID as a constant, matching the auth-server change
+
 ADMIN_ID = "00000000-0000-0000-0000-000000000000" 
 
 class Seat:
-    # A lightweight object to represent state derived from Raft/State Machine
+
     def __init__(self, seat_id: int, show_id: str, reserved: bool = False, reserved_by: str = "", reserved_at: int = 0, booking_id: str = "0", price_cents: int = 0): # <-- Added price_cents
         self.seat_id = seat_id
         self.show_id = show_id
@@ -30,7 +30,7 @@ class SeatManager:
         # The true source of state is now Raft's state machine. 
         self.shows = {}
         if self.raft_node:
-             # Load initial show/seat data from the persisted Raft state machine
+
              self.shows = self.raft_node.state_machine.get_all_shows_seats() 
         
         self.next_booking_id = 1 
@@ -67,12 +67,9 @@ class SeatManager:
 
 
     async def book_seat(self, show_id: str, seat_id: int, user_id: str, transaction_id: str) -> Optional[Seat]:
-        """
-        Proposes a seat reservation command to the Raft consensus group.
-        Transaction ID is used as the booking identifier.
-        """
+        
         if self.raft_node and self.raft_node.is_leader():
-            # 1. Check current state from the Raft State Machine
+            # Check current state from the Raft State Machine
             seat_record = self.raft_node.get_seat_state(show_id, seat_id)
             
             if not seat_record.get("exists"):
@@ -80,9 +77,9 @@ class SeatManager:
                  return None
             
             if seat_record.get("reserved"):
-                return None # Already reserved
+                return None 
 
-            # 2. Create command 
+            #  Create command 
             command = json.dumps({
                 "type": "reserve",
                 "show_id": show_id, 
@@ -92,14 +89,14 @@ class SeatManager:
             }).encode()
             
             try:
-                # 3. Propose through Raft and wait for commit
+                #  Propose through Raft and wait for commit
                 await self.raft_node.propose(command)
                 
-                # 4. Check if reservation succeeded in the state machine
+                #  Check if reservation succeeded in the state machine
                 final_state = self.raft_node.get_seat_state(show_id, seat_id)
                 
                 if final_state.get("reserved") and final_state.get("user_id") == user_id:
-                    # Successfully booked via Raft. 
+
                     return await self.query_seat(show_id, seat_id) 
                 else:
                     return None
@@ -108,7 +105,7 @@ class SeatManager:
                 logger.warning("Raft proposal failed: %s", e)
                 return None
         elif self.raft_node and not self.raft_node.is_leader():
-            # Not leader, fail immediately 
+
             raise PermissionError("Not the current Raft leader.")
         
         return None
@@ -144,7 +141,7 @@ class SeatManager:
             return [], 0
 
         total_seats = show_data["total_seats"]
-        # Create a list of all seat IDs for the show
+
         all_seat_ids = list(range(1, total_seats + 1))
         
         start = page_token
@@ -153,7 +150,7 @@ class SeatManager:
 
         seats_to_query = all_seat_ids[start:end]
         
-        # Query state for the required seats concurrently
+
         query_tasks = [self.query_seat(show_id, seat_id) for seat_id in seats_to_query]
         seats_list = await asyncio.gather(*query_tasks)
         
@@ -168,7 +165,7 @@ class SeatManager:
             return show_data.get("price_cents") if show_data else None
         return None
     
-    # Add this method to the SeatManager class in seat_manager.py
+
     
     def get_all_shows_info(self) -> Dict:
         """Get information about all shows from the Raft State Machine."""
