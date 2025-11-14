@@ -1950,5 +1950,285 @@
     "status": "COMPLETED",
     "created_at": 1763113406,
     "card_number_masked": "XXXX-XXXX-XXXX-1029"
+  },
+  "d1ab6c1a-fd0d-4e68-9dc4-d45d75aa3d1b": {
+    "user_id": "ae18578d-5337-499b-83f8-90a0025e74af",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134813,
+    "card_number_masked": "XXXX-XXXX-XXXX-1000"
+  },
+  "ddd185ee-00eb-4315-b212-eb24f5dd90ed": {
+    "user_id": "547dbd00-73b8-4533-a72b-9e9709c59433",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134813,
+    "card_number_masked": "XXXX-XXXX-XXXX-1001"
+  },
+  "9403b41b-e280-4626-b772-a2e02c049bab": {
+    "user_id": "04ff8a24-3382-4c2e-b1b4-0ca0ce4380d2",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134813,
+    "card_number_masked": "XXXX-XXXX-XXXX-1002"
+  },
+  "1d544593-ec77-4d2b-b637-11cf70914531": {
+    "user_id": "588b45f6-0717-4a0f-b331-2f85881e9ae8",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134813,
+    "card_number_masked": "XXXX-XXXX-XXXX-1003"
+  },
+  "303c5ebd-c18e-46b9-94ba-a7c3f9a08c31": {
+    "user_id": "189b4491-b90e-41ca-b0f9-41600c30f27e",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134813,
+    "card_number_masked": "XXXX-XXXX-XXXX-1004"
+  },
+  "2a13f1c9-f801-45fa-83bc-33d7876650a0": {
+    "user_id": "0c647c22-985f-46ea-b408-038e0ab25ac7",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134813,
+    "card_number_masked": "XXXX-XXXX-XXXX-1005"
+  },
+  "f7424c6b-60b9-45c9-b22d-cc935a8abbee": {
+    "user_id": "21a6345a-fadf-4f33-8b4e-8c1762cf0d6b",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134813,
+    "card_number_masked": "XXXX-XXXX-XXXX-1006"
+  },
+  "d6453b26-8b7d-458e-bce1-381d5b7a7749": {
+    "user_id": "cc3cbf0c-3634-4b64-94d8-86f9df347539",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134813,
+    "card_number_masked": "XXXX-XXXX-XXXX-1007"
+  },
+  "6b4d293f-dddb-462c-b61d-4dce3d6485fc": {
+    "user_id": "277cd27c-e4d8-44d1-bd6a-67022001f327",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134813,
+    "card_number_masked": "XXXX-XXXX-XXXX-1008"
+  },
+  "3b517088-ecae-4abd-99ae-c2f0dabf4094": {
+    "user_id": "76631b72-9f54-445d-827e-e9eb1281f5ca",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134813,
+    "card_number_masked": "XXXX-XXXX-XXXX-1009"
+  },
+  "de6d4a07-f1ec-462c-ac60-5491db50821b": {
+    "user_id": "dffef577-90db-4fec-ada8-2b7327519b64",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134813,
+    "card_number_masked": "XXXX-XXXX-XXXX-1010"
+  },
+  "707927ff-6bd1-409e-b285-36a8c3a48f61": {
+    "user_id": "3c804131-e696-4fd7-8815-945f9b6b954d",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134813,
+    "card_number_masked": "XXXX-XXXX-XXXX-1011"
+  },
+  "f70d3adb-8903-4204-a1b0-4e4113a56bba": {
+    "user_id": "3feb1a93-a99c-4dc5-966f-e90ce7918b2f",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134813,
+    "card_number_masked": "XXXX-XXXX-XXXX-1012"
+  },
+  "038e47d5-3fc3-4b99-a3b4-7b8a98b7aac7": {
+    "user_id": "010d850b-dc68-4df1-b2bf-47cfe1bdc54f",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134814,
+    "card_number_masked": "XXXX-XXXX-XXXX-1013"
+  },
+  "8ab4b5b8-f511-4158-80a1-35f986a63a25": {
+    "user_id": "a91da25b-28ca-43c2-9b61-6d3faadca83c",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134814,
+    "card_number_masked": "XXXX-XXXX-XXXX-1014"
+  },
+  "10a9c0d0-2a80-416b-ada4-035e99f29514": {
+    "user_id": "f98bcfef-fc46-4fe6-9880-d7299c93c973",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134814,
+    "card_number_masked": "XXXX-XXXX-XXXX-1015"
+  },
+  "c9eb1b71-9f7d-464f-b399-1bcc2db15e67": {
+    "user_id": "c1186ee6-2680-475a-933c-e6be09390d4f",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134814,
+    "card_number_masked": "XXXX-XXXX-XXXX-1016"
+  },
+  "0e031b7a-b07f-416e-90b3-ea4f8c369512": {
+    "user_id": "9c7c39af-f0dc-48dc-9aa1-2307f6923c51",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134814,
+    "card_number_masked": "XXXX-XXXX-XXXX-1017"
+  },
+  "a9b4eab4-1a7a-40b4-b760-bd7ac80a2a10": {
+    "user_id": "0c5aff3f-e434-4839-b737-963f4e0fa06a",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134814,
+    "card_number_masked": "XXXX-XXXX-XXXX-1018"
+  },
+  "f9117adc-4c53-4175-b1e4-7f7d7879c50f": {
+    "user_id": "f4ef55f8-10fd-48e5-81eb-551e1cd211a4",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134814,
+    "card_number_masked": "XXXX-XXXX-XXXX-1019"
+  },
+  "9356d91d-f947-4db5-8003-f6cd60727310": {
+    "user_id": "ac5a74bc-fd4c-4aa3-b4f9-d040faed53bc",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134814,
+    "card_number_masked": "XXXX-XXXX-XXXX-1020"
+  },
+  "3a6e5476-651c-4d5e-bfc4-fbfbbf4e8195": {
+    "user_id": "3b18a381-ca0f-47e7-98f8-574882ff23d0",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134814,
+    "card_number_masked": "XXXX-XXXX-XXXX-1021"
+  },
+  "bc134f94-c554-46db-86be-5fa8845f19fe": {
+    "user_id": "60686c90-88df-4a42-a767-0b17a0981c52",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134814,
+    "card_number_masked": "XXXX-XXXX-XXXX-1022"
+  },
+  "45c0c62f-abdf-4c7f-92c0-6c7d378d4550": {
+    "user_id": "6e624438-5bba-440d-83b0-f63f79bb28d1",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134814,
+    "card_number_masked": "XXXX-XXXX-XXXX-1023"
+  },
+  "d19029ff-770b-4c4d-a609-07189ace4460": {
+    "user_id": "a88addae-fa61-44a3-aab7-7337c71acb0b",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134814,
+    "card_number_masked": "XXXX-XXXX-XXXX-1024"
+  },
+  "5fee7b9d-18bf-4bd1-86e0-5192afafa39f": {
+    "user_id": "9a5a1a0d-0cc9-4811-80c0-b87cd275ab0c",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134814,
+    "card_number_masked": "XXXX-XXXX-XXXX-1025"
+  },
+  "529539bc-036e-4320-8ce7-b536016037fd": {
+    "user_id": "338c172e-d2f0-4d90-af35-9f415636aa6a",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134814,
+    "card_number_masked": "XXXX-XXXX-XXXX-1026"
+  },
+  "7f64c023-491c-41d8-aba9-11b02ca340ca": {
+    "user_id": "9b189c39-69aa-41bd-adcd-cd13acfe0516",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134814,
+    "card_number_masked": "XXXX-XXXX-XXXX-1027"
+  },
+  "3c4a370c-a3e1-4fdd-82af-e6c22d491909": {
+    "user_id": "7e0dbb96-c1af-4ce8-897d-4d9670f37965",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134814,
+    "card_number_masked": "XXXX-XXXX-XXXX-1028"
+  },
+  "1adc7753-a195-4d18-9431-fa709b639660": {
+    "user_id": "f32807a1-c1e9-49a5-9c33-046f27dcba6e",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763134814,
+    "card_number_masked": "XXXX-XXXX-XXXX-1029"
+  },
+  "4cbdeb74-12e2-48c5-9516-27056e8f6eb2": {
+    "user_id": "316a5dfb-30c4-489f-a3de-e4147f657ae9",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763135860,
+    "card_number_masked": "XXXX-XXXX-XXXX-3456"
+  },
+  "c4a6d550-313d-4629-b15a-4a2848a629a1": {
+    "user_id": "316a5dfb-30c4-489f-a3de-e4147f657ae9",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763135948,
+    "card_number_masked": "XXXX-XXXX-XXXX-3456"
+  },
+  "c1b99066-9ac9-4ee8-85f9-b7296def25ca": {
+    "user_id": "316a5dfb-30c4-489f-a3de-e4147f657ae9",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763146598,
+    "card_number_masked": "XXXX-XXXX-XXXX-3456"
+  },
+  "94f54163-28ee-41b8-9ce3-eb1853e93fa8": {
+    "user_id": "316a5dfb-30c4-489f-a3de-e4147f657ae9",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763147077,
+    "card_number_masked": "XXXX-XXXX-XXXX-3456"
+  },
+  "69a6255d-fd4b-4ada-9c4c-0c3a9140f082": {
+    "user_id": "316a5dfb-30c4-489f-a3de-e4147f657ae9",
+    "amount_cents": 100,
+    "currency": "USD",
+    "status": "COMPLETED",
+    "created_at": 1763147127,
+    "card_number_masked": "XXXX-XXXX-XXXX-3456"
   }
 }

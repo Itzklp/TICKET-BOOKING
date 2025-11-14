@@ -11,6 +11,177 @@
     "abc@gmail.com": {
       "password": "abc",
       "user_id": "980a42c4-7286-416c-9889-11e1e9ce9694"
+    },
+    "user0@test.com": {
+      "password": "pass0",
+      "user_id": "ae18578d-5337-499b-83f8-90a0025e74af"
+    },
+    "user1@test.com": {
+      "password": "pass1",
+      "user_id": "547dbd00-73b8-4533-a72b-9e9709c59433"
+    },
+    "user2@test.com": {
+      "password": "pass2",
+      "user_id": "04ff8a24-3382-4c2e-b1b4-0ca0ce4380d2"
+    },
+    "user3@test.com": {
+      "password": "pass3",
+      "user_id": "588b45f6-0717-4a0f-b331-2f85881e9ae8"
+    },
+    "user4@test.com": {
+      "password": "pass4",
+      "user_id": "189b4491-b90e-41ca-b0f9-41600c30f27e"
+    },
+    "user5@test.com": {
+      "password": "pass5",
+      "user_id": "0c647c22-985f-46ea-b408-038e0ab25ac7"
+    },
+    "user6@test.com": {
+      "password": "pass6",
+      "user_id": "21a6345a-fadf-4f33-8b4e-8c1762cf0d6b"
+    },
+    "user7@test.com": {
+      "password": "pass7",
+      "user_id": "cc3cbf0c-3634-4b64-94d8-86f9df347539"
+    },
+    "user8@test.com": {
+      "password": "pass8",
+      "user_id": "277cd27c-e4d8-44d1-bd6a-67022001f327"
+    },
+    "user9@test.com": {
+      "password": "pass9",
+      "user_id": "76631b72-9f54-445d-827e-e9eb1281f5ca"
+    },
+    "user10@test.com": {
+      "password": "pass10",
+      "user_id": "dffef577-90db-4fec-ada8-2b7327519b64"
+    },
+    "user11@test.com": {
+      "password": "pass11",
+      "user_id": "3c804131-e696-4fd7-8815-945f9b6b954d"
+    },
+    "user12@test.com": {
+      "password": "pass12",
+      "user_id": "3feb1a93-a99c-4dc5-966f-e90ce7918b2f"
+    },
+    "user13@test.com": {
+      "password": "pass13",
+      "user_id": "010d850b-dc68-4df1-b2bf-47cfe1bdc54f"
+    },
+    "user14@test.com": {
+      "password": "pass14",
+      "user_id": "a91da25b-28ca-43c2-9b61-6d3faadca83c"
+    },
+    "user15@test.com": {
+      "password": "pass15",
+      "user_id": "f98bcfef-fc46-4fe6-9880-d7299c93c973"
+    },
+    "user16@test.com": {
+      "password": "pass16",
+      "user_id": "c1186ee6-2680-475a-933c-e6be09390d4f"
+    },
+    "user17@test.com": {
+      "password": "pass17",
+      "user_id": "9c7c39af-f0dc-48dc-9aa1-2307f6923c51"
+    },
+    "user18@test.com": {
+      "password": "pass18",
+      "user_id": "0c5aff3f-e434-4839-b737-963f4e0fa06a"
+    },
+    "user19@test.com": {
+      "password": "pass19",
+      "user_id": "f4ef55f8-10fd-48e5-81eb-551e1cd211a4"
+    },
+    "user20@test.com": {
+      "password": "pass20",
+      "user_id": "ac5a74bc-fd4c-4aa3-b4f9-d040faed53bc"
+    },
+    "user21@test.com": {
+      "password": "pass21",
+      "user_id": "3b18a381-ca0f-47e7-98f8-574882ff23d0"
+    },
+    "user22@test.com": {
+      "password": "pass22",
+      "user_id": "60686c90-88df-4a42-a767-0b17a0981c52"
+    },
+    "user23@test.com": {
+      "password": "pass23",
+      "user_id": "6e624438-5bba-440d-83b0-f63f79bb28d1"
+    },
+    "user24@test.com": {
+      "password": "pass24",
+      "user_id": "a88addae-fa61-44a3-aab7-7337c71acb0b"
+    },
+    "user25@test.com": {
+      "password": "pass25",
+      "user_id": "9a5a1a0d-0cc9-4811-80c0-b87cd275ab0c"
+    },
+    "user26@test.com": {
+      "password": "pass26",
+      "user_id": "338c172e-d2f0-4d90-af35-9f415636aa6a"
+    },
+    "user27@test.com": {
+      "password": "pass27",
+      "user_id": "9b189c39-69aa-41bd-adcd-cd13acfe0516"
+    },
+    "user28@test.com": {
+      "password": "pass28",
+      "user_id": "7e0dbb96-c1af-4ce8-897d-4d9670f37965"
+    },
+    "user29@test.com": {
+      "password": "pass29",
+      "user_id": "f32807a1-c1e9-49a5-9c33-046f27dcba6e"
+    },
+    "test@failover.com": {
+      "password": "test123",
+      "user_id": "316a5dfb-30c4-489f-a3de-e4147f657ae9"
     }
+  },
+  "sessions": {
+    "95ae39f1-ef86-4c59-ba58-093e224cfbca": "00000000-0000-0000-0000-000000000000",
+    "d316c2d1-00b2-4da7-86de-f06fd2b02c1a": "ae18578d-5337-499b-83f8-90a0025e74af",
+    "591b9c8d-318b-4093-8ddc-63c5577ab82e": "547dbd00-73b8-4533-a72b-9e9709c59433",
+    "72b15df5-ad55-4658-bb7f-d722a351e6d9": "04ff8a24-3382-4c2e-b1b4-0ca0ce4380d2",
+    "1482ed54-3f16-473e-9c96-ffffa97cde5c": "588b45f6-0717-4a0f-b331-2f85881e9ae8",
+    "541e32ba-e5ff-4c0e-8f7c-d3b4247ede2d": "189b4491-b90e-41ca-b0f9-41600c30f27e",
+    "7db7d802-99a0-4f16-a876-9b7b6428ab61": "0c647c22-985f-46ea-b408-038e0ab25ac7",
+    "b853a366-9a3e-483f-99b8-b723979977a4": "21a6345a-fadf-4f33-8b4e-8c1762cf0d6b",
+    "1da34692-2444-4486-b028-116c6404ce6d": "cc3cbf0c-3634-4b64-94d8-86f9df347539",
+    "3305bc52-31d4-4374-af42-dba42325247f": "277cd27c-e4d8-44d1-bd6a-67022001f327",
+    "6026919c-793a-47c6-841c-7d51ade796b5": "76631b72-9f54-445d-827e-e9eb1281f5ca",
+    "f42aacdc-da6c-4183-9dd4-9367c90f592e": "dffef577-90db-4fec-ada8-2b7327519b64",
+    "acb8982c-270d-44e7-9c06-be485056e1ea": "3c804131-e696-4fd7-8815-945f9b6b954d",
+    "0d480748-d3e7-4aec-9c66-dfffe9dac09a": "3feb1a93-a99c-4dc5-966f-e90ce7918b2f",
+    "04278ef3-d810-4d20-aaf8-80e12de70517": "010d850b-dc68-4df1-b2bf-47cfe1bdc54f",
+    "9baf19e6-7a91-4091-85cd-0b33b9ede3fc": "a91da25b-28ca-43c2-9b61-6d3faadca83c",
+    "4faeed35-1f8f-414e-8446-ed135ea61468": "f98bcfef-fc46-4fe6-9880-d7299c93c973",
+    "130922d3-7fa1-441d-a45d-0a8b8401471d": "c1186ee6-2680-475a-933c-e6be09390d4f",
+    "ba831a1b-8b94-4826-8636-d6280391f83a": "9c7c39af-f0dc-48dc-9aa1-2307f6923c51",
+    "05cf427a-50ad-4825-8efd-09a18b107edb": "0c5aff3f-e434-4839-b737-963f4e0fa06a",
+    "5155e349-8e7b-4a84-ab52-8cd185f4995a": "f4ef55f8-10fd-48e5-81eb-551e1cd211a4",
+    "6e64d47c-9716-49cf-8df7-927fd9f9835e": "ac5a74bc-fd4c-4aa3-b4f9-d040faed53bc",
+    "52631b70-ab08-462f-8fc9-cc35dee3ebcf": "3b18a381-ca0f-47e7-98f8-574882ff23d0",
+    "508d537a-5676-4eab-ac20-ef094baf18d0": "60686c90-88df-4a42-a767-0b17a0981c52",
+    "5d3ade50-2d7b-40cf-8a11-e50843a2692b": "6e624438-5bba-440d-83b0-f63f79bb28d1",
+    "68f3b49b-7393-4f0c-9b39-a182d116072d": "a88addae-fa61-44a3-aab7-7337c71acb0b",
+    "8af25347-5d41-4985-973c-eb87c21479a4": "9a5a1a0d-0cc9-4811-80c0-b87cd275ab0c",
+    "e789e935-abdd-4db2-96c5-492607bf4189": "338c172e-d2f0-4d90-af35-9f415636aa6a",
+    "2637f330-4df6-4ba6-af5c-236a928890b4": "9b189c39-69aa-41bd-adcd-cd13acfe0516",
+    "490d8d91-ae08-4af3-81b9-b7c3c92158ed": "7e0dbb96-c1af-4ce8-897d-4d9670f37965",
+    "ef9bfa3d-3459-49e2-8095-f7c3913dd1c8": "f32807a1-c1e9-49a5-9c33-046f27dcba6e",
+    "16f2618c-dd26-4fd1-94b6-f6dd5f20bf87": "00000000-0000-0000-0000-000000000000",
+    "2cf18925-2bfb-4b36-a88f-f0c6f9bd77f0": "00000000-0000-0000-0000-000000000000",
+    "6201b5ec-c86e-46a5-93fe-5d3c3c8240fa": "00000000-0000-0000-0000-000000000000",
+    "de03873f-4908-4c19-95de-86875ddc2cf6": "00000000-0000-0000-0000-000000000000",
+    "445668fe-5121-4cf3-b9d2-be2766416a21": "00000000-0000-0000-0000-000000000000",
+    "c1551483-f9bc-4a23-973a-b26060d1b218": "316a5dfb-30c4-489f-a3de-e4147f657ae9",
+    "e60be454-f3a9-4db5-a40a-7b7fe2ea585c": "00000000-0000-0000-0000-000000000000",
+    "34d7c98e-18ff-4b7a-9d66-91844be1554d": "316a5dfb-30c4-489f-a3de-e4147f657ae9",
+    "2b8f1d67-ed31-4633-b22f-9cc7a3758173": "00000000-0000-0000-0000-000000000000",
+    "8d6dbaab-b100-4b97-9634-c5eb046791b4": "316a5dfb-30c4-489f-a3de-e4147f657ae9",
+    "c741e6e6-3e1f-42c3-882f-cfbe5fbf11f0": "00000000-0000-0000-0000-000000000000",
+    "c24cc83d-40eb-4dbe-84ce-d94e2a94e1fd": "316a5dfb-30c4-489f-a3de-e4147f657ae9",
+    "0c7595a1-5921-421b-8321-9f71d0a2c09f": "00000000-0000-0000-0000-000000000000",
+    "b7383393-bede-4023-973c-3436803841a9": "316a5dfb-30c4-489f-a3de-e4147f657ae9"
   }
 }
