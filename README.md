@@ -223,8 +223,9 @@ python -m grpc_tools.protoc -I=proto --python_out=proto --grpc_python_out=proto 
 
 **Start All Services**:
 ```bash
-chmod +x start_cluster_terminals.sh  # First time only
+chmod +x start_cluster_terminals.sh  # First time only for Linux or MacOs
 ./start_cluster_terminals.sh
+start_cluster_terminals.bat # First time only for Windows
 ```
 
 This opens 6 separate terminal windows:
@@ -240,13 +241,15 @@ The cluster needs time for leader election and log synchronization.
 
 **Start Client**:
 ```bash
-chmod +x start_client.sh  # First time only
+chmod +x start_client.sh  # First time only for Linux or MacOs
 ./start_client.sh
+start_client.bat # First time only for Windows
 ```
 
 **Stop All Services**:
 ```bash
-./stop_cluster.sh
+./stop_cluster.sh # For Linux or MacOs
+stop_cluster.bat # For Windows
 ```
 
 ### Option 2: Manual Startup
