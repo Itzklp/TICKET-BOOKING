@@ -58,5 +58,47 @@
         "reserved_at": 1763112980016
       }
     }
+  },
+  "akash_gupta_2025": {
+    "total_seats": 20,
+    "price_cents": 2000,
+    "seats": {
+      "1": {
+        "reserved": true,
+        "user_id": "f96a1244-c4da-416a-9c3f-2de829ddf3ef",
+        "booking_id": "d06a734e-dd5f-4092-aa02-0703b495842e",
+        "reserved_at": 1763154455452
+      }
+    }
+  },
+  "failover_test": {
+    "total_seats": 10,
+    "price_cents": 100,
+    "seats": {
+      "1": {
+        "reserved": true,
+        "user_id": "032c9284-bf73-4f8b-8e1c-b06a6c08b873",
+        "booking_id": "84698a88-c06d-43d3-874b-a72d440b2bb5",
+        "reserved_at": 1763196056291
+      },
+      "2": {
+        "reserved": true,
+        "user_id": "032c9284-bf73-4f8b-8e1c-b06a6c08b873",
+        "booking_id": "cb4f16e5-bea9-4f1f-ac62-ae71325bd43a",
+        "reserved_at": 1763196065960
+      }
+    }
+  },
+  "stress_test_show": {
+    "total_seats": 10,
+    "price_cents": 100,
+    "seats": {
+      "1": {
+        "reserved": true,
+        "user_id": "734cdfcc-6b5c-413b-a937-bc54e8d300b1",
+        "booking_id": "a89c4e4b-4d17-4567-a131-e1034a7aa49c",
+        "reserved_at": 1763196611650
+      }
+    }
   }
 }

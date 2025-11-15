@@ -5,10 +5,37 @@ import subprocess
 import sys
 import os
 
+# Set CREATE_NO_WINDOW flag for Windows processes to prevent console windows from flashing
+# This is a constant for Windows only, so we define it conditionally.
+CREATE_NO_WINDOW = 0
+if sys.platform == 'win32':
+    try:
+        CREATE_NO_WINDOW = subprocess.CREATE_NO_WINDOW
+    except AttributeError:
+        pass
+
+
 sys.path.append(os.path.dirname(__file__))
 
-from proto import booking_pb2, booking_pb2_grpc
-from proto import auth_pb2, auth_pb2_grpc
+# Assuming proto definitions are available
+try:
+    from proto import booking_pb2, booking_pb2_grpc
+    from proto import auth_pb2, auth_pb2_grpc
+except ImportError:
+    print("Warning: Proto files not found. Ensure 'proto' directory is in the path.")
+    # Define placeholder stubs to allow the script to be edited/viewed even without protos
+    class MockStub:
+        def __init__(self, *args): pass
+        def __getattr__(self, name): return lambda *args, **kwargs: None
+    booking_pb2_grpc = type('booking_pb2_grpc', (object,), {'BookingServiceStub': MockStub})
+    auth_pb2_grpc = type('auth_pb2_grpc', (object,), {'AuthServiceStub': MockStub})
+    class MockPB2:
+        class LoginRequest: pass
+        class RegisterRequest: pass
+        class AddShowRequest: pass
+        class BookRequest: pass
+        class QueryRequest: pass
+    booking_pb2 = auth_pb2 = MockPB2
 
 BOOKING_NODES = [
     ("127.0.0.1:50051", "node1"),
@@ -27,8 +54,17 @@ def get_admin_token():
     """Get admin token for leader detection."""
     auth_stub = auth_pb2_grpc.AuthServiceStub(grpc.insecure_channel(AUTH_ADDR))
     login_req = auth_pb2.LoginRequest(email="admin@gmail.com", password="admin123")
-    login_resp = auth_stub.Login(login_req)
-    return login_resp.session.token
+    
+    # Wait for Auth service to be ready
+    time.sleep(1)
+    
+    try:
+        login_resp = auth_stub.Login(login_req, timeout=5)
+        return login_resp.session.token
+    except grpc.RpcError as e:
+        print(f"ERROR: Could not connect to Auth service at {AUTH_ADDR}. Ensure it is running.")
+        print(f"  Details: {e}")
+        sys.exit(1)
 
 def register_and_login():
     """Register and login test user."""
@@ -37,16 +73,16 @@ def register_and_login():
     
     auth_stub = auth_pb2_grpc.AuthServiceStub(grpc.insecure_channel(AUTH_ADDR))
     
-    # Register
+    # Register (ignore error if already registered)
     try:
         reg_req = auth_pb2.RegisterRequest(email="test@failover.com", password="test123")
-        auth_stub.Register(reg_req)
+        auth_stub.Register(reg_req, timeout=3)
     except:
         pass
     
     # Login
     login_req = auth_pb2.LoginRequest(email="test@failover.com", password="test123")
-    login_resp = auth_stub.Login(login_req)
+    login_resp = auth_stub.Login(login_req, timeout=3)
     
     if not login_resp.success:
         print(f"ERROR: Login failed")
@@ -64,6 +100,7 @@ def find_leader(admin_token, max_retries=5):
             try:
                 stub = booking_pb2_grpc.BookingServiceStub(grpc.insecure_channel(addr))
                 
+                # Use a request that only the leader can execute
                 req = booking_pb2.AddShowRequest(
                     user_id=admin_token,  
                     show_id=TEST_SHOW,
@@ -78,12 +115,17 @@ def find_leader(admin_token, max_retries=5):
                     return addr, node_id
                     
             except grpc.RpcError as e:
+                # FAILED_PRECONDITION is often returned by followers in Raft implementation
                 if e.code() == grpc.StatusCode.FAILED_PRECONDITION:
                     print(f"  {node_id}: Follower")
                 elif e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
                     print(f"  {node_id}: Timeout")
+                elif e.code() == grpc.StatusCode.UNAVAILABLE:
+                    print(f"  {node_id}: UNAVAILABLE (Possibly dead)")
+                else:
+                    print(f"  {node_id}: RPC Error - {e.code().name}")
             except Exception as e:
-                print(f"  {node_id}: Error - {str(e)}")
+                print(f"  {node_id}: Generic Error - {str(e)}")
         
         if attempt < max_retries - 1:
             print(f"\n  Retry {attempt + 1}/{max_retries - 1}: Waiting 2s...")
@@ -124,6 +166,8 @@ def verify_consistency(seat_id):
                 status = "RESERVED" if resp.seat.reserved else "AVAILABLE"
                 states.append((node_id, resp.seat.reserved))
                 print(f"  {node_id}: {status}")
+            else:
+                print(f"  {node_id}: Seat not found.")
         except:
             print(f"  {node_id}: UNAVAILABLE")
     
@@ -135,14 +179,58 @@ def verify_consistency(seat_id):
         return False
 
 def kill_node(node_id):
-    """Kill a node."""
+    """Kill a node based on OS."""
     print(f"\n Killing {node_id}...")
-    subprocess.run(["pkill", "-f", f"config-{node_id}.json"], check=False)
+    
+    config_file = f"config-{node_id}.json"
+    
+    if sys.platform.startswith('linux') or sys.platform == 'darwin':
+        # Linux and macOS use pkill -f to find by command line
+        print(f"  Using pkill -f for {sys.platform}")
+        # -f matches against the full command line
+        subprocess.run(["pkill", "-f", config_file], check=False)
+        
+    elif sys.platform == 'win32':
+        # Windows requires different process termination logic using WMIC
+        print("  Attempting to terminate process via WMIC on Windows...")
+        
+        # WMIC command to find processes whose command line contains the config file
+        # and issue the terminate call.
+        try:
+            wmic_command = [
+                "wmic", "process", 
+                "where", f"commandline like '%%{config_file}%%'", 
+                "call", "terminate"
+            ]
+            
+            # Use CREATE_NO_WINDOW to hide the console window
+            result = subprocess.run(
+                wmic_command, 
+                capture_output=True, 
+                text=True, 
+                check=False, # WMIC may return non-zero even if successful
+                creationflags=CREATE_NO_WINDOW
+            )
+            
+            # WMIC often prints "No Instance(s) Available." if nothing is found
+            if result.returncode != 0 and "No Instance(s) Available." not in result.stdout:
+                 print(f"  WMIC termination may have failed. Exit code: {result.returncode}")
+                 print(f"  STDOUT: {result.stdout.strip()}")
+            else:
+                 print(f"  Process matching '{config_file}' terminated (or not found).")
+
+        except Exception as e:
+            print(f"  Critical error during Windows process termination: {e}")
+            
+    else:
+        print(f"  Warning: Unsupported operating system: {sys.platform}. Cannot reliably kill process.")
+
     time.sleep(1)
+
 
 def main():
     print("\n" + ""*60)
-    print("  RAFT LEADER FAILOVER TEST")
+    print("  RAFT LEADER FAILOVER TEST (Cross-Platform)")
     print(""*60)
     
     # Wait for cluster
@@ -184,7 +272,7 @@ def main():
     new_addr, new_id = find_leader(admin_token)
     
     if new_id == leader_id:
-        print("ERROR: Same leader!")
+        print("ERROR: Same leader! New election did not occur or failed.")
         sys.exit(1)
     
     print(f"\n New leader: {new_id}")
@@ -206,10 +294,10 @@ def main():
     c2 = verify_consistency(2)
     
     if c1 and c2:
-        print("\n SUCCESS: Failover worked!")
+        print("\n SUCCESS: Failover worked and state is consistent!")
         return 0
     else:
-        print("\n FAILURE")
+        print("\n FAILURE: State inconsistency or second booking failed.")
         return 1
 
 if __name__ == "__main__":
