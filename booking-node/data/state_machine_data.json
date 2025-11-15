@@ -26,6 +26,18 @@
         "user_id": "00000000-0000-0000-0000-000000000000",
         "booking_id": "97dfa3d5-a098-479e-b338-8c51abc7ce3f",
         "reserved_at": 1763112027078
+      },
+      "4": {
+        "reserved": true,
+        "user_id": "ac95dcb5-634d-4936-8730-cc122f7f8c4b",
+        "booking_id": "1ddb520f-8c1e-4712-a5dc-298ab3602eaa",
+        "reserved_at": 1763204796623
+      },
+      "5": {
+        "reserved": true,
+        "user_id": "ac95dcb5-634d-4936-8730-cc122f7f8c4b",
+        "booking_id": "f41ab8a9-5050-4123-8c2a-d7bc0c466b08",
+        "reserved_at": 1763205623685
       }
     }
   },
