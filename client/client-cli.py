@@ -60,9 +60,9 @@ def register_user(stub):
     response = stub.Register(request)
     
     if response.success:
-        print(f"\n✓ SUCCESS: {response.message}\n")
+        print(f"\n SUCCESS: {response.message}\n")
     else:
-        print(f"\n✗ ERROR: {response.message}\n")
+        print(f"\n ERROR: {response.message}\n")
 
 
 def login_user(stub):
@@ -79,14 +79,14 @@ def login_user(stub):
         cli_user_id = response.session.user_id
         is_admin = (cli_user_id == ADMIN_ID)
         role = "ADMIN" if is_admin else "USER"
-        print(f"\n✓ Login Successful!")
+        print(f"\n Login Successful!")
         print(f"   Role: {role}")
         print(f"   User ID: {cli_user_id}")
         print(f"   Session Token: {session_token[:16]}...")
     else:
         session_token = None
         cli_user_id = None
-        print(f"\n✗ Login Failed: {response.message}")
+        print(f"\n Login Failed: {response.message}")
     print()
 
 
@@ -112,7 +112,7 @@ def list_all_shows(stub):
             response = stub.ListShows(request, timeout=5.0)
             
             if not response.shows:
-                print("\n✗ No shows found. Admin needs to add shows using option 9.\n")
+                print("\n No shows found. Admin needs to add shows using option 9.\n")
                 print("TIP: Default admin login is admin@gmail.com / admin123\n")
                 return False
             
@@ -136,13 +136,13 @@ def list_all_shows(stub):
                 availability_pct = (show.available_seats / show.total_seats * 100) if show.total_seats > 0 else 0
                 
                 if availability_pct > 50:
-                    status = "✓ Available"
+                    status = " Available"
                 elif availability_pct > 20:
-                    status = "⚠ Limited"
+                    status = " Limited"
                 elif availability_pct > 0:
-                    status = "⚠ Almost Full"
+                    status = " Almost Full"
                 else:
-                    status = "✗ Sold Out"
+                    status = " Sold Out"
                 
                 print(f"{show.show_id:<20} {price_display:<12} {seats_display:<15} {available_display:<12} {status}")
             
@@ -220,12 +220,12 @@ def list_all_shows_fallback(stub):
                     'available_count': 0,
                     'booked_count': 0
                 }
-                print(f"   ✓ Found: {show_id}")
+                print(f"    Found: {show_id}")
         except:
             continue
     
     if not available_shows:
-        print("\n✗ No shows found.\n")
+        print("\n No shows found.\n")
         return False
     
     print(f"\n{'Show ID':<20} {'Price':<12} {'Total Seats':<12} {'Status'}")
@@ -271,7 +271,7 @@ def view_show_details(stub):
                 response = stub.ListSeats(request)
                 
                 if not response.seats and not all_seats:
-                    print(f"\n✗ Show '{show_id}' not found.\n")
+                    print(f"\n Show '{show_id}' not found.\n")
                     return
                 
                 all_seats.extend(response.seats)
@@ -296,7 +296,7 @@ def view_show_details(stub):
             print(f"{'='*60}\n")
             
             # Display seat matrix
-            print("SEAT MAP (✓ = Available | ✗ = Booked)")
+            print("SEAT MAP ( = Available |  = Booked)")
             print("─" * 60)
             
             all_seats.sort(key=lambda s: s.seat_id)
@@ -377,7 +377,7 @@ def book_seat(stub):
             
             if response.success:
                 print(f"\n{'='*60}")
-                print("  ✓ BOOKING CONFIRMED!")
+                print("   BOOKING CONFIRMED!")
                 print(f"{'='*60}")
                 print(f"  Show:         {show_id}")
                 print(f"  Seat:         {seat_id}")
@@ -395,7 +395,7 @@ def book_seat(stub):
             else:
                 if "not the Raft leader" in response.message:
                     continue
-                print(f"\n✗ Booking Failed: {response.message}\n")
+                print(f"\n Booking Failed: {response.message}\n")
                 return
                 
         except grpc.RpcError as e:
@@ -405,10 +405,10 @@ def book_seat(stub):
                 print(f"[ERROR] Node {peer_addr} unavailable")
                 continue
             else:
-                print(f"\n✗ Error: {e.details()}\n")
+                print(f"\n Error: {e.details()}\n")
                 return
     
-    print("\n✗ CRITICAL: Could not complete booking on any node.\n")
+    print("\n CRITICAL: Could not complete booking on any node.\n")
 
 
 def view_my_bookings():
@@ -431,11 +431,11 @@ def add_show(stub):
     global session_token, cli_user_id, CURRENT_BOOKING_TARGET
     
     if cli_user_id != ADMIN_ID:
-        print("\n✗ ERROR: Only admin users can add shows.\n")
+        print("\n ERROR: Only admin users can add shows.\n")
         return
     
     if not session_token:
-        print("\n✗ ERROR: You must log in as admin first.\n")
+        print("\n ERROR: You must log in as admin first.\n")
         return
     
     print_section_header("ADD NEW SHOW (Admin)")
@@ -467,7 +467,7 @@ def add_show(stub):
             response = stub.AddShow(request)
             
             if response.success:
-                print(f"\n✓ SUCCESS: {response.message}")
+                print(f"\n SUCCESS: {response.message}")
                 print(f"   Show ID: {show_id}")
                 print(f"   Seats: {total_seats}")
                 print(f"   Price: ${price_cents/100:.2f}")
@@ -482,7 +482,7 @@ def add_show(stub):
             else:
                 if "not the Raft leader" in response.message:
                     continue
-                print(f"\n✗ Failed: {response.message}\n")
+                print(f"\n Failed: {response.message}\n")
                 return
                 
         except grpc.RpcError as e:
@@ -491,10 +491,10 @@ def add_show(stub):
             elif e.code() == grpc.StatusCode.UNAVAILABLE:
                 continue
             else:
-                print(f"\n✗ Error: {e.details()}\n")
+                print(f"\n Error: {e.details()}\n")
                 return
     
-    print("\n✗ Could not add show on any node.\n")
+    print("\n Could not add show on any node.\n")
 
 
 def ask_chatbot(chatbot_stub):
@@ -618,7 +618,7 @@ def main():
             print("\nThank you for using the Distributed Ticket Booking System!\n")
             break
         else:
-            print("\n✗ Invalid choice. Please try again.\n")
+            print("\n Invalid choice. Please try again.\n")
 
 
 if __name__ == "__main__":

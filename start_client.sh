@@ -44,7 +44,7 @@ elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
     elif command -v xterm &> /dev/null; then
         xterm -title "Booking System Client" -e bash -c "cd '$PROJECT_DIR' && source '$VENV_PATH/bin/activate' && clear && echo '═══════════════════════════════════════════════════' && echo '  🎫 Distributed Ticket Booking System - Client' && echo '═══════════════════════════════════════════════════' && echo '' && echo '✅ Connected to cluster' && echo '📡 Auth: 127.0.0.1:8000' && echo '💳 Payment: 127.0.0.1:6000' && echo '🤖 Chatbot: 127.0.0.1:9000' && echo '🎫 Booking Nodes: 50051-50053' && echo '' && python client/client-cli.py; exec bash" &
     else
-        echo -e "${YELLOW}⚠️  No supported terminal emulator found${NC}"
+        echo -e "${YELLOW}  No supported terminal emulator found${NC}"
         exit 1
     fi
     
